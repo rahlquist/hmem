@@ -1,0 +1,72 @@
+{
+  "scenario_id": "PROC-03",
+  "spec_version": "1.0.0",
+  "title": "Use the environment-specific procedure, not the generic one",
+  "category": "procedural-memory",
+  "difficulty": "medium",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Host: frigg (edge). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "frigg", "role": "edge device" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "frigg"]
+  },
+  "setup": [
+    {
+      "event_id": "PROC03-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-04T09:00:00Z",
+      "speaker": "user",
+      "content": "On frigg only, the sensor cron fails unless you export TZ=UTC before running it. That is specific to frigg.",
+      "role_in_case": "target_evidence",
+      "note": "Environment-specific procedure."
+    },
+    {
+      "event_id": "PROC03-e2",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-04T09:05:00Z",
+      "speaker": "user",
+      "content": "The generic troubleshooting page says to reinstall the cron package, but that did not fix frigg.",
+      "role_in_case": "distractor",
+      "note": "Generic approach that failed for this host."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-02",
+    "timestamp": "2026-07-16T12:00:00Z",
+    "text": "The sensor cron on frigg is failing again. What is the fix?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "procedure",
+    "correct": "export TZ=UTC before running the sensor cron on frigg",
+    "acceptable_variants": ["run it with TZ=UTC", "set TZ=UTC for the cron job"],
+    "must_use_evidence": ["PROC03-e1"],
+    "must_not_use_evidence": [],
+    "abstain": false,
+    "reject_premise": false,
+    "rationale": "The answer must be the frigg-specific fix. The generic reinstall advice was explicitly recorded as having failed for this host and must not be presented as the fix."
+  },
+  "metrics": {
+    "primary": ["procedure_followed", "step_completeness", "answer_correctness"],
+    "secondary": ["recall_latency_p50_ms", "tokens_injected"]
+  }
+}

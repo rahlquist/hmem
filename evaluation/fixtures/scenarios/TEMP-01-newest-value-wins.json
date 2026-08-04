@@ -1,0 +1,82 @@
+{
+  "scenario_id": "TEMP-01",
+  "spec_version": "1.0.0",
+  "title": "Newest value wins for a changed schedule",
+  "category": "temporal-updates",
+  "difficulty": "easy",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Host: thor (NAS). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "thor", "role": "NAS/storage host" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "thor"]
+  },
+  "setup": [
+    {
+      "event_id": "TEMP01-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-01T08:00:00Z",
+      "speaker": "user",
+      "content": "Set the thor backup cron to run daily at 02:00.",
+      "role_in_case": "superseded",
+      "note": "Old schedule; superseded by e2."
+    },
+    {
+      "event_id": "TEMP01-e2",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-10T08:30:00Z",
+      "speaker": "user",
+      "content": "Change the thor backup cron to run hourly at 04:00 instead.",
+      "role_in_case": "target_evidence",
+      "note": "New schedule; the only valid value now."
+    },
+    {
+      "event_id": "TEMP01-e3",
+      "kind": "assistant_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-10T08:31:00Z",
+      "speaker": "assistant",
+      "content": "Done: thor backup cron now hourly at 04:00.",
+      "role_in_case": "context",
+      "note": "Assistant confirmation restates the new schedule."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-03",
+    "timestamp": "2026-07-14T09:00:00Z",
+    "text": "What time does the thor backup cron run now?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "exact",
+    "correct": "hourly at 04:00",
+    "acceptable_variants": ["04:00 hourly", "every hour at 04:00"],
+    "must_use_evidence": ["TEMP01-e2"],
+    "must_not_use_evidence": ["TEMP01-e1"],
+    "abstain": false,
+    "reject_premise": false,
+    "rationale": "Temporal validity: the daily 02:00 schedule was superseded on 07-10. The answer must reflect the newest value and reject the stale one."
+  },
+  "metrics": {
+    "primary": ["newest_value_used", "stale_reuse_rate", "answer_correctness"],
+    "secondary": ["recall_latency_p50_ms", "tokens_injected"]
+  }
+}

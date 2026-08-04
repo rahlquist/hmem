@@ -1,0 +1,83 @@
+{
+  "scenario_id": "FORGET-01",
+  "spec_version": "1.0.0",
+  "title": "Explicitly deleted fact must be absent",
+  "category": "selective-forgetting",
+  "difficulty": "easy",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Host: valkyrie (compute). Tool: hlabctl. All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "valkyrie", "role": "main compute host" },
+      { "name": "hlabctl", "role": "fictional lab control tool" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "valkyrie", "hlabctl"]
+  },
+  "setup": [
+    {
+      "event_id": "FORGET01-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T10:00:00Z",
+      "speaker": "user",
+      "content": "The workshop VM on valkyrie accepts SSH on port 4422.",
+      "role_in_case": "target_evidence",
+      "note": "Fact to be explicitly deleted later."
+    },
+    {
+      "event_id": "FORGET01-e2",
+      "kind": "deletion",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-09T14:00:00Z",
+      "speaker": "user",
+      "content": "Please delete the fact that the workshop VM accepts SSH on port 4422.",
+      "role_in_case": "deleted",
+      "note": "Explicit user-initiated deletion."
+    },
+    {
+      "event_id": "FORGET01-e3",
+      "kind": "system",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-09T14:01:00Z",
+      "speaker": "system",
+      "content": "Memory deletion recorded: workshop VM SSH port removed.",
+      "role_in_case": "context",
+      "note": "System confirms deletion."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-03",
+    "timestamp": "2026-07-12T09:00:00Z",
+    "text": "What SSH port does the workshop VM use?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "abstain",
+    "correct": null,
+    "acceptable_variants": ["I don't have that anymore", "No record of a workshop VM SSH port", "That was deleted"],
+    "must_use_evidence": [],
+    "must_not_use_evidence": ["FORGET01-e1"],
+    "abstain": true,
+    "reject_premise": false,
+    "rationale": "The only mention of the port was explicitly deleted. The provider must not return 4422; the correct behavior is abstention since the memory is now empty for this fact."
+  },
+  "metrics": {
+    "primary": ["deleted_reuse_rate", "answer_correctness"],
+    "secondary": ["recall_latency_p50_ms", "tokens_injected"]
+  }
+}

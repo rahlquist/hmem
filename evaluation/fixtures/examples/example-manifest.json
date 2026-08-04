@@ -1,0 +1,82 @@
+{
+  "manifest_id": "hmem-pilot-example-manifest",
+  "spec_version": "1.0.0",
+  "run_id": "dryrun-20260804-001",
+  "mode": "dry-run",
+  "created_at": "2026-08-04T14:35:00Z",
+  "operator": {
+    "name": "hmem pilot integrator (task t_390f8f9e)",
+    "note": "Example manifest for schema demonstration; a real dry run will replace this."
+  },
+  "hermes": {
+    "version": "v0.20.0 (2026.8.3)",
+    "commit": "9712b8f0"
+  },
+  "provider": {
+    "name": "hermes-builtin-memory",
+    "version": "v0.20.0 (2026.8.3)",
+    "commit": null,
+    "deployment": "bundled-plugin",
+    "integration_state": "bundled",
+    "evidence_class": "vendor-documented",
+    "config_redacted": "memory.memory_enabled=true, memory.user_profile_enabled=true, memory.memory_char_limit=<redacted default>, memory.user_char_limit=<redacted default>; no secrets, no tokens, no personal paths.",
+    "setup_failures": []
+  },
+  "models": {
+    "embedding": null,
+    "reranker": null,
+    "judge": "deepseek/deepseek-v4-flash-0731",
+    "extractor": null
+  },
+  "retrieval_config": {
+    "recall_budget": "mid",
+    "top_k": 5,
+    "context_window_chars": 12000,
+    "prompt_template_ref": "hmem-pilot/prompt-templates/v1",
+    "injection_style": "block-quoted memory section"
+  },
+  "hardware": {
+    "host": "example-host",
+    "os": "Linux (CachyOS 7.1.4-1)",
+    "cpu": "6 vCPU",
+    "ram_gb": 15,
+    "gpu": null
+  },
+  "dataset": {
+    "spec_version": "1.0.0",
+    "scenario_ids": [
+      "RET-01", "RET-02", "TEMP-01", "TEMP-02",
+      "FORGET-01", "FORGET-03",
+      "SYNTH-01", "SYNTH-02",
+      "PROC-01", "PROC-03",
+      "PREM-01", "PREM-02",
+      "ISO-01", "ISO-02",
+      "ABST-01", "ABST-02",
+      "POIS-01", "POIS-02",
+      "RESTART-01", "RESTART-03"
+    ],
+    "split": "dev",
+    "count": 20
+  },
+  "seeds": {
+    "public_seed": 20260701,
+    "private_seed_used": false,
+    "private_seed_ref": null,
+    "repetition_count": 3,
+    "variance_note": "3 repetitions per scenario; seeds/public listed, private seeds none in pilot v1."
+  },
+  "baselines": {
+    "session_search": true,
+    "lexical_baseline": true,
+    "full_context_replay": false,
+    "no_memory": true
+  },
+  "result_ref": {
+    "path": "evaluation/results/dryrun-20260804-001/RET-01.json",
+    "uri": null
+  },
+  "privacy": {
+    "contains_no_secrets": true,
+    "log_retention_note": "Raw provider logs are kept local-only and never committed (PRIV-07)."
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "result_id": "hmem-pilot-example-result",
+  "spec_version": "1.0.0",
+  "run_id": "dryrun-20260804-001",
+  "manifest_id": "hmem-pilot-example-manifest",
+  "scenario_id": "RET-01",
+  "category": "retrieval",
+  "provider": {
+    "name": "hermes-builtin-memory",
+    "version": "v0.20.0 (2026.8.3)",
+    "integration_state": "bundled",
+    "evidence_class": "vendor-documented"
+  },
+  "mode": "dry-run",
+  "probe": {
+    "text": "Remind me what we named the main compute server in the lab.",
+    "injected_context": "Memory section: valkyrie is the main compute host; thor NAS; frigg edge; odin router.",
+    "injection_tokens": 42
+  },
+  "answer": {
+    "raw_answer": "valkyrie",
+    "answer_class": "correct",
+    "answer_tokens": 1
+  },
+  "metrics": {
+    "evidence_precision": 1.0,
+    "evidence_recall": 1.0,
+    "answer_correctness": 1.0,
+    "evidence_groundedness": 1.0,
+    "recall_latency_p50_ms": 320.5,
+    "recall_latency_p95_ms": 480.2,
+    "tokens_stored": 210,
+    "tokens_retrieved": 90,
+    "tokens_injected": 42,
+    "cost_usd": 0.0012
+  },
+  "evidence": [
+    {
+      "evidence_id": "ev-1",
+      "source_event_id": "RET01-e1",
+      "class": "retrieved",
+      "role_in_case": "target_evidence"
+    },
+    {
+      "evidence_id": "ev-2",
+      "source_event_id": "RET01-e4",
+      "class": "injected",
+      "role_in_case": "context"
+    }
+  ],
+  "verdict": "pass",
+  "errors": [],
+  "provenance": {
+    "method": "dry-run",
+    "measured_by": "hmem pilot integrator",
+    "judge_model": "deepseek/deepseek-v4-flash-0731",
+    "raw_log_uri": null,
+    "reproduced_by": null
+  }
+}

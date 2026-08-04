@@ -1,0 +1,185 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hmem.dev/evaluation/schemas/run-manifest.schema.json",
+  "title": "hmem Pilot Run Manifest",
+  "description": "Pinned configuration and environment for one comparable pilot run, per the EVALUATION_ENHANCEMENTS controlled-run contract. Run manifest schema v1.0.0. Must never contain raw secrets.",
+  "version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_id",
+    "spec_version",
+    "run_id",
+    "mode",
+    "created_at",
+    "operator",
+    "hermes",
+    "provider",
+    "models",
+    "retrieval_config",
+    "hardware",
+    "dataset",
+    "seeds",
+    "baselines",
+    "result_ref",
+    "privacy"
+  ],
+  "properties": {
+    "manifest_id": { "type": "string", "minLength": 1 },
+    "spec_version": { "type": "string", "const": "1.0.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "mode": {
+      "enum": ["measured", "dry-run", "simulated"],
+      "description": "measured = real provider run; dry-run = harness smoke test without provider claims; simulated = synthetic replay, never presented as measurement."
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "operator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "note": { "type": ["string", "null"] }
+      }
+    },
+    "hermes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "commit"],
+      "properties": {
+        "version": { "type": "string" },
+        "commit": { "type": "string" }
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "deployment", "integration_state", "evidence_class", "config_redacted"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": ["string", "null"] },
+        "commit": { "type": ["string", "null"] },
+        "deployment": {
+          "enum": ["local-daemon", "bundled-plugin", "third-party-plugin", "mcp-server", "cloud", "none"]
+        },
+        "integration_state": { "$ref": "#/definitions/integration_state" },
+        "evidence_class": { "$ref": "#/definitions/evidence_class" },
+        "config_redacted": {
+          "type": "string",
+          "description": "Human-readable redacted configuration summary. Never raw secrets, tokens, keys, or personal paths."
+        },
+        "setup_failures": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "embedding": { "type": ["string", "null"] },
+        "reranker": { "type": ["string", "null"] },
+        "judge": { "type": ["string", "null"] },
+        "extractor": { "type": ["string", "null"] }
+      }
+    },
+    "retrieval_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "recall_budget": { "enum": ["low", "mid", "high", null] },
+        "top_k": { "type": ["integer", "null"], "minimum": 0 },
+        "context_window_chars": { "type": ["integer", "null"], "minimum": 0 },
+        "prompt_template_ref": { "type": ["string", "null"] },
+        "injection_style": { "type": ["string", "null"] }
+      }
+    },
+    "hardware": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "host": { "type": "string" },
+        "os": { "type": "string" },
+        "cpu": { "type": ["string", "null"] },
+        "ram_gb": { "type": ["number", "null"], "minimum": 0 },
+        "gpu": { "type": ["string", "null"] }
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spec_version", "scenario_ids", "split", "count"],
+      "properties": {
+        "spec_version": { "type": "string" },
+        "scenario_ids": { "type": "array", "items": { "type": "string" } },
+        "split": { "enum": ["dev", "held-out", "full"] },
+        "count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "seeds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["public_seed", "private_seed_used", "repetition_count"],
+      "properties": {
+        "public_seed": { "type": "integer" },
+        "private_seed_used": { "type": "boolean" },
+        "private_seed_ref": {
+          "type": ["string", "null"],
+          "description": "Pointer to a seed file stored OUTSIDE the repository. Never the seed value itself."
+        },
+        "repetition_count": { "type": "integer", "minimum": 1 },
+        "variance_note": { "type": ["string", "null"] }
+      }
+    },
+    "baselines": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "session_search": { "type": "boolean" },
+        "lexical_baseline": { "type": "boolean" },
+        "full_context_replay": { "type": "boolean" },
+        "no_memory": { "type": "boolean" }
+      }
+    },
+    "result_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string" },
+        "uri": { "type": ["string", "null"] }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contains_no_secrets"],
+      "properties": {
+        "contains_no_secrets": { "type": "boolean", "const": true },
+        "log_retention_note": { "type": ["string", "null"] }
+      }
+    }
+  },
+  "definitions": {
+    "integration_state": {
+      "enum": [
+        "bundled",
+        "third-party-plugin",
+        "mcp-only",
+        "hook-integration",
+        "documented-untested",
+        "tested-hermes-release",
+        "not-configured"
+      ]
+    },
+    "evidence_class": {
+      "enum": [
+        "hmem-measured",
+        "independently-reproduced",
+        "vendor-documented",
+        "vendor-benchmark",
+        "community-reported",
+        "inferred",
+        "unknown"
+      ]
+    }
+  }
+}

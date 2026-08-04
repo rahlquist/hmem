@@ -1,0 +1,76 @@
+{
+  "scenario_id": "PROC-02",
+  "spec_version": "1.0.0",
+  "title": "Recall a multi-step onboarding workflow in order",
+  "category": "procedural-memory",
+  "difficulty": "medium",
+  "split": "held-out",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation. Held-out: excluded from the development loop."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Host: odin (router). Tool: hlabctl. All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "odin", "role": "router" },
+      { "name": "hlabctl", "role": "fictional lab control tool" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "odin", "hlabctl"]
+  },
+  "setup": [
+    {
+      "event_id": "PROC02-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-03T09:00:00Z",
+      "speaker": "user",
+      "content": "Remember the router onboarding steps: first flash firmware 3.2, then set the LAN subnet to 10.20.0.0/24, then register it in hlabctl with the edge tag.",
+      "role_in_case": "target_evidence",
+      "note": "The full procedure, three ordered steps."
+    },
+    {
+      "event_id": "PROC02-e2",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-06T10:00:00Z",
+      "speaker": "user",
+      "content": "Unrelated: the garage camera's motion feed goes to the edge box.",
+      "role_in_case": "distractor",
+      "note": "Unrelated detail."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-03",
+    "timestamp": "2026-07-14T11:00:00Z",
+    "text": "How do I onboard a new router in the lab?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "procedure",
+    "correct": "flash firmware 3.2, set LAN subnet to 10.20.0.0/24, register in hlabctl with the edge tag",
+    "acceptable_variants": [
+      "1) flash firmware 3.2, 2) LAN subnet 10.20.0.0/24, 3) hlabctl register with edge tag",
+      "flash 3.2, configure subnet, register via hlabctl edge tag"
+    ],
+    "must_use_evidence": ["PROC02-e1"],
+    "must_not_use_evidence": [],
+    "abstain": false,
+    "reject_premise": false,
+    "rationale": "The full ordered procedure must be recalled. Missing or reordering any of the three steps should at most be partial; the garage camera detail is a distractor."
+  },
+  "metrics": {
+    "primary": ["procedure_followed", "step_completeness", "answer_correctness"],
+    "secondary": ["tokens_retrieved", "tokens_injected"]
+  }
+}

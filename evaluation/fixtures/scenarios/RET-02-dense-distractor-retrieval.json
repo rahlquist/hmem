@@ -1,0 +1,105 @@
+{
+  "scenario_id": "RET-02",
+  "spec_version": "1.0.0",
+  "title": "Dense distractor retrieval with entity substitution",
+  "category": "retrieval",
+  "difficulty": "medium",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Hosts: valkyrie (main compute), thor (NAS), frigg (edge). Project: project-nimbus (data pipeline). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "valkyrie", "role": "main compute host" },
+      { "name": "thor", "role": "NAS/storage host" },
+      { "name": "frigg", "role": "edge device" },
+      { "name": "project-nimbus", "role": "data pipeline project" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "valkyrie", "thor", "frigg", "project-nimbus"]
+  },
+  "setup": [
+    {
+      "event_id": "RET02-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-03T10:00:00Z",
+      "speaker": "user",
+      "content": "valkyrie has the RX 7900 XTX GPU for the local models.",
+      "role_in_case": "target_evidence",
+      "note": "Target fact: valkyrie's GPU."
+    },
+    {
+      "event_id": "RET02-e2",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-03T10:02:00Z",
+      "speaker": "user",
+      "content": "thor's vault share is at /mnt/vault.",
+      "role_in_case": "distractor",
+      "note": "NAS detail; similar shape but different host and topic."
+    },
+    {
+      "event_id": "RET02-e3",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-08T11:00:00Z",
+      "speaker": "user",
+      "content": "frigg polls the temperature sensor every 30 seconds.",
+      "role_in_case": "distractor",
+      "note": "Edge device detail."
+    },
+    {
+      "event_id": "RET02-e4",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-08T11:05:00Z",
+      "speaker": "user",
+      "content": "project-nimbus commits need an area prefix like [ingest] or [pipeline].",
+      "role_in_case": "distractor",
+      "note": "Project convention; unrelated to hardware."
+    },
+    {
+      "event_id": "RET02-e5",
+      "kind": "assistant_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-08T11:06:00Z",
+      "speaker": "assistant",
+      "content": "Noted: valkyrie GPU, thor vault, frigg sensor polling, nimbus commit prefixes.",
+      "role_in_case": "context",
+      "note": "Assistant summary echoes all facts."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-03",
+    "timestamp": "2026-07-12T16:00:00Z",
+    "text": "Which GPU is in the compute box?",
+    "notes": "'the compute box' substitutes for the invented host name valkyrie."
+  },
+  "expected": {
+    "answer_type": "exact",
+    "correct": "RX 7900 XTX",
+    "acceptable_variants": ["RX 7900 XTX (in valkyrie)"],
+    "must_use_evidence": ["RET02-e1"],
+    "must_not_use_evidence": [],
+    "abstain": false,
+    "reject_premise": false,
+    "rationale": "Four near-identical fact shapes; only e1 mentions a GPU. The answer must not come from the NAS share, sensor polling, or commit convention events."
+  },
+  "metrics": {
+    "primary": ["evidence_precision", "evidence_recall", "answer_correctness"],
+    "secondary": ["recall_latency_p50_ms", "tokens_retrieved", "tokens_injected"]
+  }
+}

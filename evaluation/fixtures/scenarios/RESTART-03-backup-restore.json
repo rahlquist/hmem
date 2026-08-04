@@ -1,0 +1,82 @@
+{
+  "scenario_id": "RESTART-03",
+  "spec_version": "1.0.0",
+  "title": "Backup and restore preserves memory",
+  "category": "restart-recovery",
+  "difficulty": "medium",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Host: thor (NAS). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "thor", "role": "NAS/storage host" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "thor"]
+  },
+  "setup": [
+    {
+      "event_id": "RESTART03-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:00:00Z",
+      "speaker": "user",
+      "content": "The backup target on thor is the pool called reef.",
+      "role_in_case": "target_evidence",
+      "note": "Fact stored before the backup/restore cycle."
+    },
+    {
+      "event_id": "RESTART03-e2",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-06T10:00:00Z",
+      "speaker": "user",
+      "content": "Make a backup of the memory store before the upgrade.",
+      "role_in_case": "context",
+      "note": "Backup request."
+    },
+    {
+      "event_id": "RESTART03-e3",
+      "kind": "system",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-06T10:05:00Z",
+      "speaker": "system",
+      "content": "Restart checkpoint: backup created; restore verified after simulated crash.",
+      "role_in_case": "context",
+      "note": "Runner annotation: provider is restored from backup before the probe."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-03",
+    "timestamp": "2026-07-10T14:00:00Z",
+    "text": "What is the backup target pool on thor?",
+    "notes": "The runner performs backup, crash, and restore before the probe."
+  },
+  "expected": {
+    "answer_type": "exact",
+    "correct": "reef",
+    "acceptable_variants": ["the pool reef", "reef pool"],
+    "must_use_evidence": ["RESTART03-e1"],
+    "must_not_use_evidence": [],
+    "abstain": false,
+    "reject_premise": false,
+    "rationale": "After a backup/restore cycle the stored fact must be present and unmodified. If the provider fails to restore, the fact is lost and the case fails."
+  },
+  "metrics": {
+    "primary": ["recovery_success", "post_restart_recall", "data_integrity", "setup_success"],
+    "secondary": ["tokens_retrieved", "tokens_injected"]
+  }
+}

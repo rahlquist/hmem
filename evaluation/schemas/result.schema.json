@@ -1,0 +1,173 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hmem.dev/evaluation/schemas/result.schema.json",
+  "title": "hmem Pilot Result Payload",
+  "description": "One scenario outcome for one provider run, including category-level metrics, evidence trace, and provenance. Result schema v1.0.0.",
+  "version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "result_id",
+    "spec_version",
+    "run_id",
+    "manifest_id",
+    "scenario_id",
+    "category",
+    "provider",
+    "mode",
+    "probe",
+    "answer",
+    "metrics",
+    "evidence",
+    "verdict",
+    "provenance"
+  ],
+  "properties": {
+    "result_id": { "type": "string", "minLength": 1 },
+    "spec_version": { "type": "string", "const": "1.0.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "manifest_id": { "type": "string", "minLength": 1 },
+    "scenario_id": { "type": "string", "minLength": 1 },
+    "category": {
+      "enum": [
+        "retrieval",
+        "temporal-updates",
+        "selective-forgetting",
+        "long-range-synthesis",
+        "procedural-memory",
+        "premise-awareness",
+        "isolation",
+        "abstention",
+        "poisoning-resistance",
+        "restart-recovery"
+      ]
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "integration_state", "evidence_class"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": ["string", "null"] },
+        "integration_state": {
+          "enum": [
+            "bundled",
+            "third-party-plugin",
+            "mcp-only",
+            "hook-integration",
+            "documented-untested",
+            "tested-hermes-release",
+            "not-configured"
+          ]
+        },
+        "evidence_class": {
+          "enum": [
+            "hmem-measured",
+            "independently-reproduced",
+            "vendor-documented",
+            "vendor-benchmark",
+            "community-reported",
+            "inferred",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "mode": { "enum": ["measured", "dry-run", "simulated"] },
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text"],
+      "properties": {
+        "text": { "type": "string" },
+        "injected_context": { "type": ["string", "null"] },
+        "injection_tokens": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "answer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw_answer", "answer_class"],
+      "properties": {
+        "raw_answer": { "type": "string" },
+        "answer_class": {
+          "enum": ["correct", "partial", "incorrect", "abstained", "premise_rejected", "refused"]
+        },
+        "answer_tokens": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "evidence_precision": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "evidence_recall": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "answer_correctness": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "evidence_groundedness": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "newest_value_used": { "type": ["boolean", "null"] },
+        "stale_reuse_rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "deleted_reuse_rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "synthesis_evidence_recall": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "procedure_followed": { "type": ["boolean", "null"] },
+        "step_completeness": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "premise_rejection_correct": { "type": ["boolean", "null"] },
+        "leakage_rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "containment": { "type": ["boolean", "null"] },
+        "abstention_correct": { "type": ["boolean", "null"] },
+        "hallucination_rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "attack_success": { "type": ["boolean", "null"] },
+        "poisoning_persistence": { "type": ["boolean", "null"] },
+        "untrusted_compliance": { "type": ["boolean", "null"] },
+        "recovery_success": { "type": ["boolean", "null"] },
+        "post_restart_recall": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "data_integrity": { "type": ["boolean", "null"] },
+        "setup_success": { "type": ["boolean", "null"] },
+        "ingest_latency_p50_ms": { "type": ["number", "null"], "minimum": 0 },
+        "ingest_latency_p95_ms": { "type": ["number", "null"], "minimum": 0 },
+        "recall_latency_p50_ms": { "type": ["number", "null"], "minimum": 0 },
+        "recall_latency_p95_ms": { "type": ["number", "null"], "minimum": 0 },
+        "tokens_stored": { "type": ["integer", "null"], "minimum": 0 },
+        "tokens_retrieved": { "type": ["integer", "null"], "minimum": 0 },
+        "tokens_injected": { "type": ["integer", "null"], "minimum": 0 },
+        "cpu_percent": { "type": ["number", "null"], "minimum": 0 },
+        "peak_ram_mb": { "type": ["number", "null"], "minimum": 0 },
+        "disk_growth_mb": { "type": ["number", "null"], "minimum": 0 },
+        "egress_bytes": { "type": ["number", "null"], "minimum": 0 },
+        "cost_usd": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["evidence_id", "class"],
+        "properties": {
+          "evidence_id": { "type": "string" },
+          "source_event_id": { "type": ["string", "null"] },
+          "class": {
+            "enum": ["retrieved", "injected", "inferred", "absent", "stale", "cross-boundary", "untrusted"]
+          },
+          "role_in_case": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "verdict": { "enum": ["pass", "partial", "fail", "skip", "error"] },
+    "errors": { "type": "array", "items": { "type": "string" } },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "measured_by"],
+      "properties": {
+        "method": { "enum": ["hmem-measured", "independently-reproduced", "simulated", "dry-run"] },
+        "measured_by": { "type": "string" },
+        "judge_model": { "type": ["string", "null"] },
+        "raw_log_uri": {
+          "type": ["string", "null"],
+          "description": "Local-only path to raw logs. Never published, never committed."
+        },
+        "reproduced_by": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

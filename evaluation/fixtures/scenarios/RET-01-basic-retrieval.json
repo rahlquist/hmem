@@ -1,0 +1,95 @@
+{
+  "scenario_id": "RET-01",
+  "spec_version": "1.0.0",
+  "title": "Basic fact retrieval with paraphrase and distractors",
+  "category": "retrieval",
+  "difficulty": "easy",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Hosts: valkyrie (main compute), thor (NAS), frigg (edge), odin (router). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "valkyrie", "role": "main compute host" },
+      { "name": "thor", "role": "NAS/storage host" },
+      { "name": "frigg", "role": "edge device" },
+      { "name": "odin", "role": "router" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "valkyrie", "thor", "frigg", "odin"]
+  },
+  "setup": [
+    {
+      "event_id": "RET01-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:00:00Z",
+      "speaker": "user",
+      "content": "After the move I'm renaming the lab machines. The main compute box is now valkyrie.",
+      "role_in_case": "target_evidence",
+      "note": "Target fact: main compute host is named valkyrie."
+    },
+    {
+      "event_id": "RET01-e2",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:01:00Z",
+      "speaker": "user",
+      "content": "thor is the NAS for media and backups, frigg is the little edge box, and odin is the router.",
+      "role_in_case": "supporting_evidence",
+      "note": "Names of other hosts; useful context, not the target."
+    },
+    {
+      "event_id": "RET01-e3",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:05:00Z",
+      "speaker": "user",
+      "content": "Also, the edge box runs the temperature cron and the router does DHCP reservations.",
+      "role_in_case": "distractor",
+      "note": "Unrelated duties; should not be mistaken for the host name."
+    },
+    {
+      "event_id": "RET01-e4",
+      "kind": "assistant_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:06:00Z",
+      "speaker": "assistant",
+      "content": "Got it: valkyrie compute, thor NAS, frigg edge, odin router. Temperature cron on frigg, DHCP on odin.",
+      "role_in_case": "context",
+      "note": "Assistant confirmation echoes the facts."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-02",
+    "timestamp": "2026-07-05T14:00:00Z",
+    "text": "Remind me what we named the main compute server in the lab.",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "exact",
+    "correct": "valkyrie",
+    "acceptable_variants": ["valkyrie (the compute host)"],
+    "must_use_evidence": ["RET01-e1"],
+    "must_not_use_evidence": [],
+    "abstain": false,
+    "reject_premise": false,
+    "rationale": "The paraphrase 'main compute server' must resolve to the invented host name valkyrie, stated only in event e1. Distractor duties in e3 must not be confused with the name."
+  },
+  "metrics": {
+    "primary": ["evidence_precision", "evidence_recall", "answer_correctness"],
+    "secondary": ["recall_latency_p50_ms", "tokens_injected"]
+  }
+}

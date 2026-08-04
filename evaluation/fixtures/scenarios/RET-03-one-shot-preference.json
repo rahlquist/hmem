@@ -1,0 +1,86 @@
+{
+  "scenario_id": "RET-03",
+  "spec_version": "1.0.0",
+  "title": "One-shot preference retrieval amid unrelated noise",
+  "category": "retrieval",
+  "difficulty": "medium",
+  "split": "held-out",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation. Held-out: excluded from the development loop."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Project: project-cairn (documentation). Host: valkyrie (main compute). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "project-cairn", "role": "documentation project" },
+      { "name": "valkyrie", "role": "main compute host" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "project-cairn", "valkyrie"]
+  },
+  "setup": [
+    {
+      "event_id": "RET03-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-04T12:00:00Z",
+      "speaker": "user",
+      "content": "New rule for project-cairn commits: imperative mood, start with the verb, no ticket numbers.",
+      "role_in_case": "target_evidence",
+      "note": "Target fact: cairn commit style, stated once."
+    },
+    {
+      "event_id": "RET03-e2",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-04T12:03:00Z",
+      "speaker": "user",
+      "content": "and the docs build runs on valkyrie every night at 02:00.",
+      "role_in_case": "distractor",
+      "note": "Unrelated operational detail."
+    },
+    {
+      "event_id": "RET03-e3",
+      "kind": "assistant_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-06T09:00:00Z",
+      "speaker": "assistant",
+      "content": "cairn build ran fine last night.",
+      "role_in_case": "context",
+      "note": "Confirms builds happen; does not restate the commit rule."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-03",
+    "timestamp": "2026-07-15T13:00:00Z",
+    "text": "What's the commit style for cairn again?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "exact",
+    "correct": "imperative mood, start with the verb, no ticket numbers",
+    "acceptable_variants": [
+      "imperative mood, verb first, no ticket numbers",
+      "start with the verb, imperative, no ticket numbers"
+    ],
+    "must_use_evidence": ["RET03-e1"],
+    "must_not_use_evidence": [],
+    "abstain": false,
+    "reject_premise": false,
+    "rationale": "The preference was stated exactly once; retrieval must surface it despite the build-schedule distractor and the later build-status context."
+  },
+  "metrics": {
+    "primary": ["evidence_precision", "evidence_recall", "answer_correctness"],
+    "secondary": ["tokens_retrieved", "tokens_injected"]
+  }
+}

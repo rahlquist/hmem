@@ -1,0 +1,92 @@
+{
+  "scenario_id": "FORGET-02",
+  "spec_version": "1.0.0",
+  "title": "Invalidated then deleted fact stays gone",
+  "category": "selective-forgetting",
+  "difficulty": "medium",
+  "split": "held-out",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation. Held-out: excluded from the development loop."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Project: project-nimbus (data pipeline). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "project-nimbus", "role": "data pipeline project" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "project-nimbus"]
+  },
+  "setup": [
+    {
+      "event_id": "FORGET02-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-03T12:00:00Z",
+      "speaker": "user",
+      "content": "project-nimbus ingest queue is Kafka at localhost:9092.",
+      "role_in_case": "target_evidence",
+      "note": "Original queue config; invalidated by e2 then deleted by e3."
+    },
+    {
+      "event_id": "FORGET02-e2",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-08T15:00:00Z",
+      "speaker": "user",
+      "content": "Correction: the ingest queue is Redis at localhost:6379 now; the Kafka config is dead.",
+      "role_in_case": "superseded",
+      "note": "Invalidates e1; itself deleted by e3."
+    },
+    {
+      "event_id": "FORGET02-e3",
+      "kind": "deletion",
+      "session_id": "sess-03",
+      "timestamp": "2026-07-11T09:30:00Z",
+      "speaker": "user",
+      "content": "Delete the ingest queue configuration entirely, both the Kafka and Redis notes.",
+      "role_in_case": "deleted",
+      "note": "Deletion covers both prior values."
+    },
+    {
+      "event_id": "FORGET02-e4",
+      "kind": "system",
+      "session_id": "sess-03",
+      "timestamp": "2026-07-11T09:31:00Z",
+      "speaker": "system",
+      "content": "Memory deletion recorded: ingest queue configuration removed.",
+      "role_in_case": "context",
+      "note": "System confirms deletion."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-04",
+    "timestamp": "2026-07-14T10:00:00Z",
+    "text": "What message broker does project-nimbus use for ingest?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "abstain",
+    "correct": null,
+    "acceptable_variants": ["I don't have that anymore", "No queue config recorded", "That was deleted"],
+    "must_use_evidence": [],
+    "must_not_use_evidence": ["FORGET02-e1", "FORGET02-e2"],
+    "abstain": true,
+    "reject_premise": false,
+    "rationale": "Both the original and the corrected queue values were explicitly deleted. Neither Kafka nor Redis may resurface; abstention is correct because the fact set is empty."
+  },
+  "metrics": {
+    "primary": ["deleted_reuse_rate", "answer_correctness"],
+    "secondary": ["tokens_retrieved", "tokens_injected"]
+  }
+}

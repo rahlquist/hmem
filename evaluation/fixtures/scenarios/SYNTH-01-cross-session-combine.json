@@ -1,0 +1,97 @@
+{
+  "scenario_id": "SYNTH-01",
+  "spec_version": "1.0.0",
+  "title": "Combine facts introduced in separate sessions",
+  "category": "long-range-synthesis",
+  "difficulty": "medium",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Hosts: valkyrie (compute), thor (NAS). Project: project-nimbus (data pipeline). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "valkyrie", "role": "main compute host" },
+      { "name": "thor", "role": "NAS/storage host" },
+      { "name": "project-nimbus", "role": "data pipeline project" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "valkyrie", "thor", "project-nimbus"]
+  },
+  "setup": [
+    {
+      "event_id": "SYNTH01-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:00:00Z",
+      "speaker": "user",
+      "content": "project-nimbus runs the nightly batch job on valkyrie.",
+      "role_in_case": "target_evidence",
+      "note": "Part 1: batch location."
+    },
+    {
+      "event_id": "SYNTH01-e2",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-06T10:00:00Z",
+      "speaker": "user",
+      "content": "The nightly batch writes its output to the analytics database on thor.",
+      "role_in_case": "target_evidence",
+      "note": "Part 2: output destination."
+    },
+    {
+      "event_id": "SYNTH01-e3",
+      "kind": "user_message",
+      "session_id": "sess-03",
+      "timestamp": "2026-07-09T11:00:00Z",
+      "speaker": "user",
+      "content": "By the way, the analytics database is called nimbus-metrics.",
+      "role_in_case": "target_evidence",
+      "note": "Part 3: database name."
+    },
+    {
+      "event_id": "SYNTH01-e4",
+      "kind": "user_message",
+      "session_id": "sess-03",
+      "timestamp": "2026-07-09T11:05:00Z",
+      "speaker": "user",
+      "content": "The docs site theme is purple, if that ever matters.",
+      "role_in_case": "distractor",
+      "note": "Unrelated detail in the same session as e3."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-04",
+    "timestamp": "2026-07-15T14:00:00Z",
+    "text": "Where does project-nimbus's nightly batch run, and where does it put the analytics data?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "synthesis",
+    "correct": "The nightly batch runs on valkyrie and writes to the nimbus-metrics analytics database on thor",
+    "acceptable_variants": [
+      "batch on valkyrie, output to nimbus-metrics on thor",
+      "valkyrie runs the batch; nimbus-metrics on thor receives the data"
+    ],
+    "must_use_evidence": ["SYNTH01-e1", "SYNTH01-e2", "SYNTH01-e3"],
+    "must_not_use_evidence": [],
+    "abstain": false,
+    "reject_premise": false,
+    "rationale": "The complete answer requires combining three facts that were introduced in three separate sessions. The docs theme distractor must not be included."
+  },
+  "metrics": {
+    "primary": ["synthesis_evidence_recall", "answer_correctness", "evidence_groundedness"],
+    "secondary": ["tokens_retrieved", "tokens_injected"]
+  }
+}

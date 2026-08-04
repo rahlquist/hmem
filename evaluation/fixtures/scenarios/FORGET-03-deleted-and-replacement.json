@@ -1,0 +1,93 @@
+{
+  "scenario_id": "FORGET-03",
+  "spec_version": "1.0.0",
+  "title": "Deleted fact replaced by a new value",
+  "category": "selective-forgetting",
+  "difficulty": "medium",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Hosts: thor (NAS), frigg (edge). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "thor", "role": "NAS/storage host" },
+      { "name": "frigg", "role": "edge device" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "thor", "frigg"]
+  },
+  "setup": [
+    {
+      "event_id": "FORGET03-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T10:00:00Z",
+      "speaker": "user",
+      "content": "The staging database is Postgres on thor at port 5433.",
+      "role_in_case": "deleted",
+      "note": "Old staging DB entry; explicitly deleted in e2."
+    },
+    {
+      "event_id": "FORGET03-e2",
+      "kind": "deletion",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-06T16:00:00Z",
+      "speaker": "user",
+      "content": "Remove the staging database entry from memory.",
+      "role_in_case": "deleted",
+      "note": "Explicit deletion of the old value."
+    },
+    {
+      "event_id": "FORGET03-e3",
+      "kind": "user_message",
+      "session_id": "sess-03",
+      "timestamp": "2026-07-07T11:00:00Z",
+      "speaker": "user",
+      "content": "We moved staging to MariaDB on frigg at port 3307.",
+      "role_in_case": "target_evidence",
+      "note": "Replacement value recorded after the deletion."
+    },
+    {
+      "event_id": "FORGET03-e4",
+      "kind": "assistant_message",
+      "session_id": "sess-03",
+      "timestamp": "2026-07-07T11:01:00Z",
+      "speaker": "assistant",
+      "content": "Noted: staging DB is MariaDB on frigg at port 3307.",
+      "role_in_case": "context",
+      "note": "Assistant confirmation of the replacement value."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-04",
+    "timestamp": "2026-07-10T14:00:00Z",
+    "text": "What database runs the staging environment now?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "exact",
+    "correct": "MariaDB on frigg at port 3307",
+    "acceptable_variants": ["MariaDB at 3307 on frigg", "frigg:3307 MariaDB"],
+    "must_use_evidence": ["FORGET03-e3"],
+    "must_not_use_evidence": ["FORGET03-e1"],
+    "abstain": false,
+    "reject_premise": false,
+    "rationale": "The old Postgres-on-thor value was explicitly deleted before the replacement was stored. The answer must be the replacement value and must not resurrect the deleted one."
+  },
+  "metrics": {
+    "primary": ["deleted_reuse_rate", "answer_correctness"],
+    "secondary": ["recall_latency_p50_ms", "tokens_injected"]
+  }
+}

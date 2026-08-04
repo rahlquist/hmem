@@ -1,0 +1,72 @@
+{
+  "scenario_id": "RESTART-01",
+  "spec_version": "1.0.0",
+  "title": "Memory survives a restart",
+  "category": "restart-recovery",
+  "difficulty": "easy",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Host: frigg (edge). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "frigg", "role": "edge device" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "frigg"]
+  },
+  "setup": [
+    {
+      "event_id": "RESTART01-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:00:00Z",
+      "speaker": "user",
+      "content": "The mail relay runs on frigg at port 2525.",
+      "role_in_case": "target_evidence",
+      "note": "Fact stored before the restart."
+    },
+    {
+      "event_id": "RESTART01-e2",
+      "kind": "system",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-03T02:00:00Z",
+      "speaker": "system",
+      "content": "Restart checkpoint: provider will restart between setup and probe; memory should persist.",
+      "role_in_case": "context",
+      "note": "Runner annotation: the provider restarts here."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-02",
+    "timestamp": "2026-07-05T14:00:00Z",
+    "text": "Which host runs the mail relay and on what port?",
+    "notes": "The runner performs a provider restart after setup and before the probe."
+  },
+  "expected": {
+    "answer_type": "exact",
+    "correct": "frigg at port 2525",
+    "acceptable_variants": ["frigg:2525", "mail relay on frigg port 2525"],
+    "must_use_evidence": ["RESTART01-e1"],
+    "must_not_use_evidence": [],
+    "abstain": false,
+    "reject_premise": false,
+    "rationale": "After a restart the stored fact must still be recalled correctly. Losing the fact is a fail even if the provider reports the loss honestly."
+  },
+  "metrics": {
+    "primary": ["recovery_success", "post_restart_recall", "data_integrity", "setup_success"],
+    "secondary": ["recall_latency_p50_ms", "tokens_injected"]
+  }
+}

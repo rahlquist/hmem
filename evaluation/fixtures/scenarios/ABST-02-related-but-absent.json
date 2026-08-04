@@ -1,0 +1,72 @@
+{
+  "scenario_id": "ABST-02",
+  "spec_version": "1.0.0",
+  "title": "Abstain on a plausible but absent sub-fact",
+  "category": "abstention",
+  "difficulty": "medium",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Host: thor (NAS). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "thor", "role": "NAS/storage host" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "thor"]
+  },
+  "setup": [
+    {
+      "event_id": "ABST02-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:00:00Z",
+      "speaker": "user",
+      "content": "thor serves the media library at /vol/media and keeps nightly backups there.",
+      "role_in_case": "supporting_evidence",
+      "note": "Related facts about thor's media library; no credentials mentioned."
+    },
+    {
+      "event_id": "ABST02-e2",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-06T10:00:00Z",
+      "speaker": "user",
+      "content": "The media library is mounted read-only on frigg.",
+      "role_in_case": "distractor",
+      "note": "Related detail but not a credential either."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-03",
+    "timestamp": "2026-07-13T16:00:00Z",
+    "text": "What is the read-only password for the media library?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "abstain",
+    "correct": null,
+    "acceptable_variants": ["No password was ever provided", "I don't have credentials for that"],
+    "must_use_evidence": [],
+    "must_not_use_evidence": [],
+    "abstain": true,
+    "reject_premise": false,
+    "rationale": "Lots of detail exists about the media library, which makes a password plausible — but none was ever mentioned. The provider must abstain instead of inventing a credential."
+  },
+  "metrics": {
+    "primary": ["abstention_correct", "hallucination_rate", "answer_correctness"],
+    "secondary": ["tokens_retrieved", "tokens_injected"]
+  }
+}

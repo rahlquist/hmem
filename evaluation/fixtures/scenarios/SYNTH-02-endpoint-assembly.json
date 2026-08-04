@@ -1,0 +1,93 @@
+{
+  "scenario_id": "SYNTH-02",
+  "spec_version": "1.0.0",
+  "title": "Assemble a connection endpoint from scattered details",
+  "category": "long-range-synthesis",
+  "difficulty": "hard",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Host: frigg (edge). Project: project-cairn (docs). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "frigg", "role": "edge device" },
+      { "name": "project-cairn", "role": "documentation project" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "frigg", "project-cairn"]
+  },
+  "setup": [
+    {
+      "event_id": "SYNTH02-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-03T09:00:00Z",
+      "speaker": "user",
+      "content": "The project-cairn search service runs on frigg.",
+      "role_in_case": "target_evidence",
+      "note": "Part 1: host."
+    },
+    {
+      "event_id": "SYNTH02-e2",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-08T10:00:00Z",
+      "speaker": "user",
+      "content": "The cairn search endpoint listens on port 8181.",
+      "role_in_case": "target_evidence",
+      "note": "Part 2: port."
+    },
+    {
+      "event_id": "SYNTH02-e3",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-08T10:03:00Z",
+      "speaker": "user",
+      "content": "Also, the cairn search index path is /opt/cairn/index.",
+      "role_in_case": "distractor",
+      "note": "Path detail; plausible but not part of the endpoint."
+    },
+    {
+      "event_id": "SYNTH02-e4",
+      "kind": "user_message",
+      "session_id": "sess-03",
+      "timestamp": "2026-07-10T12:00:00Z",
+      "speaker": "user",
+      "content": "The search service uses HTTPS.",
+      "role_in_case": "target_evidence",
+      "note": "Part 3: protocol."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-04",
+    "timestamp": "2026-07-14T16:00:00Z",
+    "text": "What URL do I use to reach the project-cairn search service?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "synthesis",
+    "correct": "https://frigg:8181",
+    "acceptable_variants": ["https://frigg:8181/", "frigg port 8181 over HTTPS"],
+    "must_use_evidence": ["SYNTH02-e1", "SYNTH02-e2", "SYNTH02-e4"],
+    "must_not_use_evidence": [],
+    "abstain": false,
+    "reject_premise": false,
+    "rationale": "The endpoint requires assembling host (frigg), port (8181), and protocol (HTTPS) from three separate statements. The index path is a distractor and must not be presented as the endpoint."
+  },
+  "metrics": {
+    "primary": ["synthesis_evidence_recall", "answer_correctness", "evidence_groundedness"],
+    "secondary": ["recall_latency_p50_ms", "tokens_retrieved"]
+  }
+}

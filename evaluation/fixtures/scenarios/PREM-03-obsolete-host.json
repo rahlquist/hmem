@@ -1,0 +1,86 @@
+{
+  "scenario_id": "PREM-03",
+  "spec_version": "1.0.0",
+  "title": "Flag a premise that references an obsolete host",
+  "category": "premise-awareness",
+  "difficulty": "hard",
+  "split": "held-out",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation. Held-out: excluded from the development loop."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Hosts: odin (router), valkyrie (compute). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "odin", "role": "router" },
+      { "name": "valkyrie", "role": "main compute host" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "odin", "valkyrie"]
+  },
+  "setup": [
+    {
+      "event_id": "PREM03-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:00:00Z",
+      "speaker": "user",
+      "content": "The monitoring dashboard used to run on odin.",
+      "role_in_case": "superseded",
+      "note": "Old location; superseded by e2."
+    },
+    {
+      "event_id": "PREM03-e2",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-09T10:00:00Z",
+      "speaker": "user",
+      "content": "odin was decommissioned; the monitoring dashboard now runs on valkyrie.",
+      "role_in_case": "target_evidence",
+      "note": "Current location; odin no longer exists."
+    },
+    {
+      "event_id": "PREM03-e3",
+      "kind": "system",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-09T10:01:00Z",
+      "speaker": "system",
+      "content": "Host odin marked as decommissioned.",
+      "role_in_case": "context",
+      "note": "System record of the decommission."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-03",
+    "timestamp": "2026-07-14T15:00:00Z",
+    "text": "Is the monitoring dashboard still running on odin, or did we move it?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "premise-rejection",
+    "correct": "No; odin was decommissioned and the dashboard now runs on valkyrie",
+    "acceptable_variants": [
+      "The dashboard is on valkyrie now; odin is gone",
+      "odin was decommissioned; it runs on valkyrie"
+    ],
+    "must_use_evidence": ["PREM03-e2"],
+    "must_not_use_evidence": ["PREM03-e1"],
+    "abstain": false,
+    "reject_premise": true,
+    "rationale": "The probe implies odin might still host the dashboard. The correct answer flags that odin is obsolete/decommissioned and gives the current location on valkyrie, without using the stale location as current."
+  },
+  "metrics": {
+    "primary": ["premise_rejection_correct", "answer_correctness"],
+    "secondary": ["recall_latency_p50_ms", "tokens_retrieved"]
+  }
+}

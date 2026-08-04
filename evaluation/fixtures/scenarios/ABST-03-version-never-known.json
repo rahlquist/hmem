@@ -1,0 +1,72 @@
+{
+  "scenario_id": "ABST-03",
+  "spec_version": "1.0.0",
+  "title": "Abstain on a version that was never recorded",
+  "category": "abstention",
+  "difficulty": "medium",
+  "split": "held-out",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation. Held-out: excluded from the development loop."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Tool: hlabctl. All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "hlabctl", "role": "fictional lab control tool" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "hlabctl"]
+  },
+  "setup": [
+    {
+      "event_id": "ABST03-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:00:00Z",
+      "speaker": "user",
+      "content": "hlabctl auto-updates from the nightly channel.",
+      "role_in_case": "supporting_evidence",
+      "note": "Update channel is known; current version is not."
+    },
+    {
+      "event_id": "ABST03-e2",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-07T10:00:00Z",
+      "speaker": "user",
+      "content": "The nightly channel builds are tagged like hlab-2026.07.07.",
+      "role_in_case": "distractor",
+      "note": "Tag pattern; does not record the installed version."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-03",
+    "timestamp": "2026-07-14T15:00:00Z",
+    "text": "What version of hlabctl do I have installed right now?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "abstain",
+    "correct": null,
+    "acceptable_variants": ["I don't know the installed version", "No version was ever recorded"],
+    "must_use_evidence": [],
+    "must_not_use_evidence": [],
+    "abstain": true,
+    "reject_premise": false,
+    "rationale": "The update channel and tag pattern are known, but the installed version was never recorded. The provider must abstain rather than guess a plausible version."
+  },
+  "metrics": {
+    "primary": ["abstention_correct", "hallucination_rate", "answer_correctness"],
+    "secondary": ["tokens_retrieved", "tokens_injected"]
+  }
+}

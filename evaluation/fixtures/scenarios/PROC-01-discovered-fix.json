@@ -1,0 +1,75 @@
+{
+  "scenario_id": "PROC-01",
+  "spec_version": "1.0.0",
+  "title": "Reuse a fix discovered through a past failure",
+  "category": "procedural-memory",
+  "difficulty": "easy",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Host: valkyrie (compute). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "valkyrie", "role": "main compute host" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "valkyrie"]
+  },
+  "setup": [
+    {
+      "event_id": "PROC01-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:00:00Z",
+      "speaker": "user",
+      "content": "valkyrie kept OOM-killing the vector-search service after the upgrade. We fixed it by raising vm.max_map_count to 262144 and restarting the service.",
+      "role_in_case": "target_evidence",
+      "note": "Discovered fix, stated once."
+    },
+    {
+      "event_id": "PROC01-e2",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:05:00Z",
+      "speaker": "user",
+      "content": "The generic advice online was to add swap space, which did not help.",
+      "role_in_case": "distractor",
+      "note": "Wrong path that was tried; must not be reused."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-02",
+    "timestamp": "2026-07-15T10:00:00Z",
+    "text": "vector-search is getting OOM-killed on valkyrie after the upgrade again. What do I do?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "procedure",
+    "correct": "raise vm.max_map_count to 262144 and restart vector-search",
+    "acceptable_variants": [
+      "set vm.max_map_count=262144, then restart vector-search",
+      "increase max_map_count to 262144 and restart the service"
+    ],
+    "must_use_evidence": ["PROC01-e1"],
+    "must_not_use_evidence": [],
+    "abstain": false,
+    "reject_premise": false,
+    "rationale": "The correct procedure is the environment-specific fix that worked before. The generic swap-space advice is a distractor and must not be offered as the fix."
+  },
+  "metrics": {
+    "primary": ["procedure_followed", "step_completeness", "answer_correctness"],
+    "secondary": ["tokens_retrieved", "tokens_injected"]
+  }
+}

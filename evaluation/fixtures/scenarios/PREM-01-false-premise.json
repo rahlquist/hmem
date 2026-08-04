@@ -1,0 +1,75 @@
+{
+  "scenario_id": "PREM-01",
+  "spec_version": "1.0.0",
+  "title": "Reject a probe whose premise contradicts memory",
+  "category": "premise-awareness",
+  "difficulty": "easy",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Project: project-cairn (docs). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "project-cairn", "role": "documentation project" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "project-cairn"]
+  },
+  "setup": [
+    {
+      "event_id": "PREM01-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:00:00Z",
+      "speaker": "user",
+      "content": "project-cairn docs are built with MkDocs.",
+      "role_in_case": "target_evidence",
+      "note": "The actual docs tool."
+    },
+    {
+      "event_id": "PREM01-e2",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:05:00Z",
+      "speaker": "user",
+      "content": "The build runs nightly at 02:00.",
+      "role_in_case": "supporting_evidence",
+      "note": "Context about the build."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-02",
+    "timestamp": "2026-07-10T14:00:00Z",
+    "text": "Since we migrated project-cairn docs from Sphinx to MkDocs, how often does the Sphinx build run?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "premise-rejection",
+    "correct": null,
+    "acceptable_variants": [
+      "There was no Sphinx migration; cairn docs are built with MkDocs",
+      "We never used Sphinx for cairn; the docs use MkDocs"
+    ],
+    "must_use_evidence": ["PREM01-e1"],
+    "must_not_use_evidence": [],
+    "abstain": false,
+    "reject_premise": true,
+    "rationale": "The probe's premise that cairn docs were migrated from Sphinx is false: memory says the docs are built with MkDocs. The correct behavior is to reject/flag the false premise rather than answer as if Sphinx existed."
+  },
+  "metrics": {
+    "primary": ["premise_rejection_correct", "answer_correctness"],
+    "secondary": ["tokens_retrieved", "tokens_injected"]
+  }
+}

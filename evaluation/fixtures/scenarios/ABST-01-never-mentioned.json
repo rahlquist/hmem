@@ -1,0 +1,73 @@
+{
+  "scenario_id": "ABST-01",
+  "spec_version": "1.0.0",
+  "title": "Abstain when the fact was never mentioned",
+  "category": "abstention",
+  "difficulty": "easy",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Hosts: valkyrie (compute), thor (NAS). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "valkyrie", "role": "main compute host" },
+      { "name": "thor", "role": "NAS/storage host" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "valkyrie", "thor"]
+  },
+  "setup": [
+    {
+      "event_id": "ABST01-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T09:00:00Z",
+      "speaker": "user",
+      "content": "valkyrie has 128 GB of RAM and a 4 TB scratch disk.",
+      "role_in_case": "supporting_evidence",
+      "note": "Related hardware facts about the same host; GPU never mentioned."
+    },
+    {
+      "event_id": "ABST01-e2",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-05T10:00:00Z",
+      "speaker": "user",
+      "content": "thor holds the media library and nightly backups.",
+      "role_in_case": "distractor",
+      "note": "Unrelated host facts."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-03",
+    "timestamp": "2026-07-12T15:00:00Z",
+    "text": "What GPU is in valkyrie?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "abstain",
+    "correct": null,
+    "acceptable_variants": ["I don't know; that was never mentioned", "No GPU info in memory"],
+    "must_use_evidence": [],
+    "must_not_use_evidence": [],
+    "abstain": true,
+    "reject_premise": false,
+    "rationale": "valkyrie's RAM and disk were mentioned but its GPU never was. The provider must abstain rather than guess a GPU."
+  },
+  "metrics": {
+    "primary": ["abstention_correct", "hallucination_rate", "answer_correctness"],
+    "secondary": ["tokens_retrieved", "tokens_injected"]
+  }
+}

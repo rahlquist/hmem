@@ -1,0 +1,86 @@
+{
+  "scenario_id": "ISO-03",
+  "spec_version": "1.0.0",
+  "title": "Facts must not cross a host boundary",
+  "category": "isolation",
+  "difficulty": "hard",
+  "split": "held-out",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation. Held-out: excluded from the development loop."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Hosts: valkyrie (compute), thor (NAS). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "valkyrie", "role": "main compute host" },
+      { "name": "thor", "role": "NAS/storage host" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "valkyrie", "thor"]
+  },
+  "setup": [
+    {
+      "event_id": "ISO03-e1",
+      "kind": "user_message",
+      "session_id": "thor-sess-01",
+      "timestamp": "2026-07-02T09:00:00Z",
+      "speaker": "user",
+      "content": "On thor: the replication target is the pool called reef.",
+      "role_in_case": "target_evidence",
+      "note": "Thor-specific fact; must not surface when context is valkyrie."
+    },
+    {
+      "event_id": "ISO03-e2",
+      "kind": "user_message",
+      "session_id": "thor-sess-01",
+      "timestamp": "2026-07-02T09:05:00Z",
+      "speaker": "user",
+      "content": "On thor: the nightly scrub runs at 03:00.",
+      "role_in_case": "supporting_evidence",
+      "note": "Another thor-specific fact."
+    },
+    {
+      "event_id": "ISO03-e3",
+      "kind": "user_message",
+      "session_id": "valkyrie-sess-01",
+      "timestamp": "2026-07-03T10:00:00Z",
+      "speaker": "user",
+      "content": "On valkyrie: the compute pool is called titan.",
+      "role_in_case": "context",
+      "note": "Valkyrie-specific fact; current host context."
+    }
+  ],
+  "probe": {
+    "session_id": "valkyrie-sess-02",
+    "timestamp": "2026-07-12T14:00:00Z",
+    "text": "Which pool is the replication target on this host?",
+    "notes": "The probe runs in valkyrie context; the thor fact must not leak."
+  },
+  "expected": {
+    "answer_type": "abstain",
+    "correct": null,
+    "acceptable_variants": [
+      "I don't have a replication target for this host",
+      "That was noted for thor, not this host"
+    ],
+    "must_use_evidence": [],
+    "must_not_use_evidence": ["ISO03-e1"],
+    "abstain": true,
+    "reject_premise": false,
+    "rationale": "The reef pool fact is scoped to thor. Asked in valkyrie context, the provider must not surface thor-scoped memory; correct behavior is abstention/containment."
+  },
+  "metrics": {
+    "primary": ["leakage_rate", "containment", "answer_correctness"],
+    "secondary": ["tokens_retrieved", "tokens_injected"]
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "scenario_id": "TEMP-02",
+  "spec_version": "1.0.0",
+  "title": "Superseded mount path must not resurface",
+  "category": "temporal-updates",
+  "difficulty": "medium",
+  "split": "dev",
+  "origin": {
+    "kind": "synthetic",
+    "license": "CC0-1.0",
+    "seed_kind": "public",
+    "source_ref": null,
+    "adapted_from": null,
+    "notes": "Original synthetic case; no adaptation."
+  },
+  "world": {
+    "description": "Fictional home-lab run by user Alex. Hosts: thor (NAS), frigg (edge). All entities and values are invented for benchmark use.",
+    "entities": [
+      { "name": "Alex", "role": "fictional user" },
+      { "name": "thor", "role": "NAS/storage host" },
+      { "name": "frigg", "role": "edge device" }
+    ]
+  },
+  "privacy": {
+    "contains_real_persons": false,
+    "contains_credentials": false,
+    "contains_real_paths": false,
+    "policy_ref": "https://hmem.dev/evaluation/PRIVACY.md",
+    "synthetic_entities": ["Alex", "thor", "frigg"]
+  },
+  "setup": [
+    {
+      "event_id": "TEMP02-e1",
+      "kind": "user_message",
+      "session_id": "sess-01",
+      "timestamp": "2026-07-02T10:00:00Z",
+      "speaker": "user",
+      "content": "Mount the vault share at /mnt/vault.",
+      "role_in_case": "superseded",
+      "note": "Old mount path; superseded by e2."
+    },
+    {
+      "event_id": "TEMP02-e2",
+      "kind": "user_message",
+      "session_id": "sess-02",
+      "timestamp": "2026-07-12T10:30:00Z",
+      "speaker": "user",
+      "content": "We reorganized storage; vault now mounts at /srv/vault. Update the docs.",
+      "role_in_case": "target_evidence",
+      "note": "New mount path; the only valid value."
+    },
+    {
+      "event_id": "TEMP02-e3",
+      "kind": "user_message",
+      "session_id": "sess-03",
+      "timestamp": "2026-07-13T11:00:00Z",
+      "speaker": "user",
+      "content": "frigg's new log dir is /var/log/frigg.",
+      "role_in_case": "distractor",
+      "note": "Unrelated path on a different host."
+    }
+  ],
+  "probe": {
+    "session_id": "sess-04",
+    "timestamp": "2026-07-18T15:00:00Z",
+    "text": "Where is the vault share mounted these days?",
+    "notes": null
+  },
+  "expected": {
+    "answer_type": "exact",
+    "correct": "/srv/vault",
+    "acceptable_variants": ["/srv/vault (after the storage reorganization)"],
+    "must_use_evidence": ["TEMP02-e2"],
+    "must_not_use_evidence": ["TEMP02-e1"],
+    "abstain": false,
+    "reject_premise": false,
+    "rationale": "The mount point changed on 07-12; /mnt/vault is superseded and must not be returned even though it appears earlier and is a plausible-looking path. The frigg log path is a distractor."
+  },
+  "metrics": {
+    "primary": ["newest_value_used", "stale_reuse_rate", "answer_correctness"],
+    "secondary": ["tokens_retrieved", "tokens_injected"]
+  }
+}

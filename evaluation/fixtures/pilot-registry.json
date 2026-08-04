@@ -1,0 +1,138 @@
+{
+  "registry_id": "hmem-pilot-registry-v1",
+  "spec_version": "1.0.0",
+  "generated_by": "research profile, task t_fce4a2e2",
+  "generated_at": "2026-08-04T14:30:00Z",
+  "split": {
+    "policy": "dev cases may be used to develop and tune the harness. held-out cases are frozen and excluded from the development loop, reserved for final reporting. Both are published because all pilot v1 cases are synthetic (PRIV-08).",
+    "dev": [
+      "RET-01", "RET-02", "TEMP-01", "TEMP-02",
+      "FORGET-01", "FORGET-03",
+      "SYNTH-01", "SYNTH-02",
+      "PROC-01", "PROC-03",
+      "PREM-01", "PREM-02",
+      "ISO-01", "ISO-02",
+      "ABST-01", "ABST-02",
+      "POIS-01", "POIS-02",
+      "RESTART-01", "RESTART-03"
+    ],
+    "held_out": [
+      "RET-03", "TEMP-03", "FORGET-02", "SYNTH-03", "PROC-02",
+      "PREM-03", "ISO-03", "ABST-03", "POIS-03", "RESTART-02"
+    ],
+    "immutable_regression_core": [
+      "RET-01", "TEMP-01", "FORGET-01", "SYNTH-01", "ABST-01", "POIS-01", "RESTART-01"
+    ],
+    "note": "Immutable regression core never changes; refresh rotates the remaining cases."
+  },
+  "providers": [
+    {
+      "provider_id": "hermes-builtin-memory",
+      "name": "Hermes built-in memory (MEMORY.md/USER.md)",
+      "kind": "builtin",
+      "integration_state": "bundled",
+      "evidence_class": "vendor-documented",
+      "status": "configured",
+      "latest_known_version": "v0.20.0 (2026.8.3)",
+      "verified_against_hermes": "v0.20.0 commit 9712b8f0",
+      "notes": "Always active alongside any external provider; restart-safe (state on disk, re-injected at session start). Observed active in dev environment (provider audit t_8728060f).",
+      "setup_failures": []
+    },
+    {
+      "provider_id": "hermes-session-search",
+      "name": "Hermes session_search (FTS5 over SQLite state DB)",
+      "kind": "builtin",
+      "integration_state": "bundled",
+      "evidence_class": "vendor-documented",
+      "status": "configured",
+      "latest_known_version": "v0.20.0 (2026.8.3)",
+      "verified_against_hermes": "v0.20.0 commit 9712b8f0",
+      "notes": "Retrieval baseline over past sessions; state.db present in dev environment. Needs populated session DB for meaningful retrieval.",
+      "setup_failures": []
+    },
+    {
+      "provider_id": "lexical-baseline",
+      "name": "Lexical/BM25 retrieval baseline (harness reference)",
+      "kind": "baseline",
+      "integration_state": "documented-untested",
+      "evidence_class": "inferred",
+      "status": "unknown",
+      "latest_known_version": null,
+      "verified_against_hermes": null,
+      "notes": "Not a provider. Runner-implemented deterministic baseline (recommended: SQLite FTS5/BM25 over synthetic event text, fixed top_k). Never promoted to a provider measurement.",
+      "setup_failures": []
+    },
+    {
+      "provider_id": "no-memory",
+      "name": "No-memory base model reference",
+      "kind": "reference",
+      "integration_state": "bundled",
+      "evidence_class": "unknown",
+      "status": "configured",
+      "latest_known_version": null,
+      "verified_against_hermes": "v0.20.0 commit 9712b8f0",
+      "notes": "Base-model reference with no provider; measures model-only behavior. Current default state of the dev environment (provider audit §1).",
+      "setup_failures": []
+    },
+    {
+      "provider_id": "hindsight",
+      "name": "Hindsight (Vectorize)",
+      "kind": "plugin",
+      "integration_state": "third-party-plugin",
+      "evidence_class": "vendor-documented",
+      "status": "not-configured",
+      "latest_known_version": "hindsight-client==0.6.1 (lazy dep, v0.20.0)",
+      "verified_against_hermes": null,
+      "notes": "Plugin ships bundled in v0.20.0 (cloud mode default, or local_external daemon). Not configured in dev environment; requires HINDSIGHT_API_KEY (cloud) or a running daemon at http://localhost:8888 plus an LLM provider key (local).",
+      "setup_failures": [
+        "not-configured: no HINDSIGHT_API_KEY supplied",
+        "not-configured: no local hindsight daemon endpoint available"
+      ]
+    },
+    {
+      "provider_id": "mnemosyne",
+      "name": "Mnemosyne (mnemosyne-oss)",
+      "kind": "plugin",
+      "integration_state": "documented-untested",
+      "evidence_class": "vendor-documented",
+      "status": "not-configured",
+      "latest_known_version": null,
+      "verified_against_hermes": null,
+      "notes": "NOT bundled in v0.20.0 (absent from provider list; vendor 'ships enabled' claim not observed). Requires user install (mnemosyne-hermes + memory profile) and an embedding endpoint or ~800 MB RAM for local embeddings. MCP path (mnemosyne mcp) is an alternative.",
+      "setup_failures": [
+        "not-configured: mnemosyne-hermes package not installed",
+        "not-configured: no MNEMOSYNE_EMBEDDING_API_KEY / OPENROUTER_API_KEY / OPENAI_API_KEY supplied"
+      ]
+    }
+  ],
+  "claim_evidence_classes": [
+    { "id": "hmem-measured", "definition": "Measured by this benchmark in a controlled run." },
+    { "id": "independently-reproduced", "definition": "Reproduced by an independent party." },
+    { "id": "vendor-documented", "definition": "Documented by the vendor." },
+    { "id": "vendor-benchmark", "definition": "Vendor-published benchmark score." },
+    { "id": "community-reported", "definition": "Reported by community/users." },
+    { "id": "inferred", "definition": "Inferred from architecture or documentation." },
+    { "id": "unknown", "definition": "No evidence." }
+  ],
+  "integration_states": [
+    { "id": "bundled", "definition": "Ships with the named Hermes release and is active without extra setup." },
+    { "id": "third-party-plugin", "definition": "Installed as a third-party plugin; may require credentials or a daemon." },
+    { "id": "mcp-only", "definition": "Reachable only through MCP; not a native memory provider." },
+    { "id": "hook-integration", "definition": "Integrated via hooks rather than the memory provider interface." },
+    { "id": "documented-untested", "definition": "Documented by the vendor but not observed working in this environment." },
+    { "id": "tested-hermes-release", "definition": "Tested against a named Hermes release by this project." },
+    { "id": "not-configured", "definition": "Present or documented but not configured; never scored as measured." }
+  ],
+  "privacy_rules": [
+    { "id": "PRIV-01", "rule": "Synthetic content only. All scenario fixtures use invented entities, hosts, projects, values, and conversations. No real persons, addresses, credentials, file paths, hostnames, or machine identifiers." },
+    { "id": "PRIV-02", "rule": "No real conversation material. Nothing from actual Hermes sessions may be copied into fixtures or reports. Real-world interaction shapes may inspire scenarios; content is rewritten with invented names and facts." },
+    { "id": "PRIV-03", "rule": "No documents, binaries, or extracted text. PDFs, DOCX files, archives, and extracted plain text from memorypapers/ (or anywhere else) must never be committed. Public documentation cites stable DOI, arXiv, or publisher URLs only." },
+    { "id": "PRIV-04", "rule": "Private seeds stay private. Committed fixtures and manifests contain public seeds only; private seeds are referenced by pointer and never by value." },
+    { "id": "PRIV-05", "rule": "Credentials are synthetic and flagged. Any invented credential-like value is clearly fictional, prefixed to be obviously synthetic (e.g. hlab-...), and marked privacy.contains_credentials: true." },
+    { "id": "PRIV-06", "rule": "Redacted configs. Run manifests record provider.config_redacted as a human-readable summary with secrets removed. Raw configs, tokens, and keys never appear in committed artifacts." },
+    { "id": "PRIV-07", "rule": "Raw logs stay local. Raw provider dumps and conversation logs referenced by results (provenance.raw_log_uri) are local-only, never committed." },
+    { "id": "PRIV-08", "rule": "Held-out cases are frozen but public. Pilot v1 held-out scenarios are synthetic and published; held-out means excluded from the development/tuning loop, not hidden." },
+    { "id": "PRIV-09", "rule": "Licensed adaptation requires citation. Any scenario adapted from a public benchmark cites the stable source (origin.source_ref) and declares its license; local copies of the source are not committed." },
+    { "id": "PRIV-10", "rule": "Scan before commit. Every fixture, manifest, and result must pass the public-safety substring scan in tools/validate_fixtures.py before it is committed or published." }
+  ]
+}

@@ -1,0 +1,229 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hmem.dev/evaluation/schemas/scenario.schema.json",
+  "title": "hmem Pilot Scenario",
+  "description": "A single synthetic memory-behavior case for the hmem pilot corpus. Fully synthetic: no real persons, credentials, paths, or conversation material. Scenario schema v1.0.0.",
+  "version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scenario_id",
+    "spec_version",
+    "title",
+    "category",
+    "difficulty",
+    "split",
+    "origin",
+    "world",
+    "privacy",
+    "setup",
+    "probe",
+    "expected",
+    "metrics"
+  ],
+  "properties": {
+    "scenario_id": {
+      "type": "string",
+      "pattern": "^[A-Z]+-[0-9]{2}$",
+      "description": "Unique case id. Category prefix per the hmem capability matrix: RET, TEMP, FORGET, SYNTH, PROC, PREM, ISO, ABST, POIS, RESTART."
+    },
+    "spec_version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Version of the scenario schema this fixture conforms to."
+    },
+    "title": { "type": "string", "minLength": 3 },
+    "category": {
+      "enum": [
+        "retrieval",
+        "temporal-updates",
+        "selective-forgetting",
+        "long-range-synthesis",
+        "procedural-memory",
+        "premise-awareness",
+        "isolation",
+        "abstention",
+        "poisoning-resistance",
+        "restart-recovery"
+      ]
+    },
+    "difficulty": { "enum": ["easy", "medium", "hard"] },
+    "split": {
+      "enum": ["dev", "held-out"],
+      "description": "dev = may be used to develop/tune the harness. held-out = frozen, excluded from the development loop, reserved for final reporting."
+    },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "license", "seed_kind"],
+      "properties": {
+        "kind": { "enum": ["synthetic", "adapted-public", "community"] },
+        "license": { "type": "string" },
+        "seed_kind": { "enum": ["public", "private", "none"] },
+        "source_ref": {
+          "type": ["string", "null"],
+          "description": "Stable DOI/arXiv/URL for adapted cases. Never a local file path."
+        },
+        "adapted_from": { "type": ["string", "null"] },
+        "notes": { "type": ["string", "null"] }
+      }
+    },
+    "world": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "entities"],
+      "properties": {
+        "description": { "type": "string" },
+        "entities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "role"],
+            "properties": {
+              "name": { "type": "string" },
+              "role": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contains_real_persons",
+        "contains_credentials",
+        "contains_real_paths",
+        "policy_ref"
+      ],
+      "properties": {
+        "contains_real_persons": { "type": "boolean", "const": false },
+        "contains_credentials": { "type": "boolean" },
+        "contains_real_paths": { "type": "boolean", "const": false },
+        "policy_ref": { "type": "string" },
+        "synthetic_entities": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "setup": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/definitions/event" }
+    },
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["session_id", "timestamp", "text"],
+      "properties": {
+        "session_id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "text": { "type": "string", "minLength": 1 },
+        "notes": { "type": ["string", "null"] }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["answer_type", "abstain", "reject_premise", "rationale"],
+      "properties": {
+        "answer_type": {
+          "enum": ["exact", "set", "synthesis", "procedure", "abstain", "premise-rejection", "negative"]
+        },
+        "correct": { "type": ["string", "array", "null"] },
+        "acceptable_variants": { "type": "array", "items": { "type": "string" } },
+        "must_use_evidence": { "type": "array", "items": { "type": "string" } },
+        "must_not_use_evidence": { "type": "array", "items": { "type": "string" } },
+        "abstain": { "type": "boolean" },
+        "reject_premise": { "type": "boolean" },
+        "rationale": { "type": "string" }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary"],
+      "properties": {
+        "primary": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/metric_name" } },
+        "secondary": { "type": "array", "items": { "$ref": "#/definitions/metric_name" } }
+      }
+    }
+  },
+  "definitions": {
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_id", "kind", "session_id", "timestamp", "speaker", "content", "role_in_case"],
+      "properties": {
+        "event_id": { "type": "string", "pattern": "^[A-Z0-9]+-[a-z0-9]+$" },
+        "kind": {
+          "enum": [
+            "user_message",
+            "assistant_message",
+            "tool_result",
+            "system",
+            "instruction",
+            "retention_note",
+            "deletion",
+            "correction"
+          ]
+        },
+        "session_id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "speaker": { "enum": ["user", "assistant", "system", "tool", "provider"] },
+        "content": { "type": "string", "minLength": 1 },
+        "role_in_case": {
+          "enum": [
+            "target_evidence",
+            "supporting_evidence",
+            "distractor",
+            "untrusted",
+            "context",
+            "deleted",
+            "superseded",
+            "irrelevant"
+          ]
+        },
+        "note": { "type": ["string", "null"] }
+      }
+    },
+    "metric_name": {
+      "enum": [
+        "evidence_precision",
+        "evidence_recall",
+        "answer_correctness",
+        "evidence_groundedness",
+        "newest_value_used",
+        "stale_reuse_rate",
+        "deleted_reuse_rate",
+        "synthesis_evidence_recall",
+        "procedure_followed",
+        "step_completeness",
+        "premise_rejection_correct",
+        "leakage_rate",
+        "containment",
+        "abstention_correct",
+        "hallucination_rate",
+        "attack_success",
+        "poisoning_persistence",
+        "untrusted_compliance",
+        "recovery_success",
+        "post_restart_recall",
+        "data_integrity",
+        "setup_success",
+        "ingest_latency_p50_ms",
+        "ingest_latency_p95_ms",
+        "recall_latency_p50_ms",
+        "recall_latency_p95_ms",
+        "tokens_stored",
+        "tokens_retrieved",
+        "tokens_injected",
+        "cpu_percent",
+        "peak_ram_mb",
+        "disk_growth_mb",
+        "egress_bytes",
+        "cost_usd"
+      ]
+    }
+  }
+}
