@@ -155,6 +155,16 @@ class TestManifestSchema(unittest.TestCase):
         errors = v.validate_payload(bad, "run_manifest", SCHEMA_DIR)
         self.assertTrue(any("mode" in e for e in errors))
 
+    def test_measured_mode_accepts(self):
+        m = self._manifest()
+        m["mode"] = "measured"
+        self.assertEqual(v.validate_payload(m, "run_manifest", SCHEMA_DIR), [])
+
+    def test_measured_providers_declaration_accepts(self):
+        m = self._manifest()
+        m["run"]["measured_providers"] = ["lexical_baseline"]
+        self.assertEqual(v.validate_payload(m, "run_manifest", SCHEMA_DIR), [])
+
 
 class TestResultSchema(unittest.TestCase):
     def _result(self):

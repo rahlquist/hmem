@@ -9,6 +9,8 @@ Examples:
     python -m pilot.cli --out-dir /tmp/hmem-pilot --repetitions 3 --seed 7
     python -m pilot.cli --providers hermes_memory,lexical_baseline
     python -m pilot.cli --unavailable hindsight,mnemosyne
+    python -m pilot.cli --mode measured --isolated --measured lexical_baseline \\
+        --providers lexical_baseline --out-dir pilot-out/measured
 """
 import argparse
 import json
@@ -43,7 +45,9 @@ def _print_summary(summary, report):
           f"{totals['unsupported']} unsupported, "
           f"{totals['setup_failed']} setup_failed")
     print(f"simulated:     {report['report_json']['provenance_counts']['simulated']} "
-          f"(all stub results are simulated, provenance=inferred)")
+          f"(stub results are simulated, provenance=inferred)")
+    print(f"measured:      {report['report_json']['provenance_counts']['measured']} "
+          f"(real baseline executed, provenance=hmem-measured)")
     if summary["result_validation_errors"]:
         print("result schema validation errors: "
               f"{len(summary['result_validation_errors'])}")
@@ -72,8 +76,19 @@ def main(argv=None):
                         help="ingest+recall repetitions per scenario (default: 3)")
     parser.add_argument("--seed", type=int, default=7,
                         help="deterministic seed (default: 7)")
-    parser.add_argument("--mode", choices=["dry_run", "live"], default="dry_run",
-                        help="run mode (default: dry_run)")
+    parser.add_argument("--mode", choices=["dry_run", "live", "measured"],
+                        default="dry_run",
+                        help="run mode (default: dry_run); measured = real "
+                             "lexical baseline executes (measured/hmem-measured)")
+    parser.add_argument("--isolated", action="store_true",
+                        help="write every artifact into a unique "
+                             "<out-dir>/runs/<manifest_id>/ directory so "
+                             "stale results can never contaminate a new run")
+    parser.add_argument("--measured", default="",
+                        help="comma-separated provider ids whose REAL "
+                             "(measured) implementation executes; results for "
+                             "these are labeled measurement_kind=measured / "
+                             "provenance=hmem-measured (default: none)")
     parser.add_argument("--validate-only", action="store_true",
                         help="validate schemas and scenario fixtures, then exit")
     args = parser.parse_args(argv)
@@ -91,6 +106,13 @@ def main(argv=None):
 
     providers = [p.strip() for p in args.providers.split(",") if p.strip()]
     unavailable = {p.strip() for p in args.unavailable.split(",") if p.strip()}
+    measured = {p.strip() for p in args.measured.split(",") if p.strip()}
+    if measured and not providers:
+        providers = sorted(measured)
+    if args.mode == "measured" and not measured:
+        print("--mode measured requires --measured <provider-ids> "
+              "(e.g. --measured lexical_baseline).", file=sys.stderr)
+        return 2
     config = rn.RunConfig(
         schema_dir=args.schema_dir,
         scenarios_dir=args.scenarios_dir,
@@ -100,19 +122,27 @@ def main(argv=None):
         repetitions=args.repetitions,
         seed=args.seed,
         mode=args.mode,
+        isolated=args.isolated,
+        measured=measured,
     )
     summary = rn.run_dry_run(config)
-    paths = rn.write_outputs(args.out_dir, summary)
+    # In isolated mode every artifact goes into the run's unique directory
+    # (summary["run_dir"] == args.out_dir in plain mode), so a later
+    # invocation can never overwrite an earlier run's manifest/results.
+    write_dir = summary["run_dir"]
+    paths = rn.write_outputs(write_dir, summary)
     report = rp.generate_report(summary["manifest"], summary["results"],
                                 summary["validation_errors"],
                                 summary["schema_errors"])
-    with open(os.path.join(args.out_dir, "report.md"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(write_dir, "report.md"), "w", encoding="utf-8") as fh:
         fh.write(report["report_md"])
-    with open(os.path.join(args.out_dir, "report.json"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(write_dir, "report.json"), "w", encoding="utf-8") as fh:
         json.dump(report["report_json"], fh, indent=2)
 
     _print_summary(summary, report)
-    print(f"report:        {os.path.join(args.out_dir, 'report.md')}")
+    print(f"report:        {os.path.join(write_dir, 'report.md')}")
+    if args.isolated:
+        print(f"run dir:       {write_dir}")
     return 0
 
 

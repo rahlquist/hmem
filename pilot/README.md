@@ -5,9 +5,17 @@ Dry-run safe: runs synthetic scenarios against provider adapter **stubs**
 (built-in Hermes memory, session_search / simple lexical baseline, Hindsight,
 Mnemosyne) with no real providers, network, or secrets required.
 
-**Status:** implementation complete, dry-run verified. All results are
-simulations (`measurement_kind=simulated`, `provenance=inferred`) and must
-never be promoted to `hmem-measured` evidence.
+The harness also ships a **real measured lexical baseline**: a pure-Python
+Okapi BM25 ranker (`pilot/lexical.py`) that executes in-process and produces
+`measurement_kind=measured` / `provenance=hmem-measured` results — clearly
+separated from the simulated stubs, which keep
+`measurement_kind=simulated` / `provenance=inferred` forever.
+
+**Status:** implementation complete, dry-run verified + measured lexical
+baseline executed (three isolated full-corpus runs, see
+`evaluation/measured-baseline-verification.md`). Stub results are
+simulations and must never be promoted to `hmem-measured` evidence; only
+the real BM25 path is labeled measured.
 
 **Task:** t_4f309a57 (runner/report implementation).
 **Upstream spec:** [EVALUATION_ENHANCEMENTS.md](../EVALUATION_ENHANCEMENTS.md).
@@ -25,12 +33,15 @@ pilot/
   scenarios/      15 synthetic deterministic fixtures (dev/held-out declared)
   convert_eval.py thin converter: evaluation/ corpus (30 reviewed cases) -> pilot schema
   adapters.py     deterministic provider adapter stubs (policies, no LLM/network)
+  lexical.py      REAL Okapi BM25 lexical baseline (BM25Index + measured adapter)
+  isolation.py    unique run dirs + stale-result validation (isolated runs)
+  measured_report.py cross-run category-first measured baseline aggregation
   validate.py     versioned payload validation (jsonschema or stdlib fallback)
   env.py          declared environment + resource capture (p50/p95, tokens, CPU/RAM/disk/network)
   runner.py       dry-run orchestration: failures captured, unavailable reported
   report.py       category-first aggregate report (limitations, variance, provenance)
   cli.py          command-line entrypoint
-  tests/          unittest suite (86 tests)
+  tests/          unittest suite (144 tests)
 ```
 
 ## Usage
@@ -53,7 +64,45 @@ python -m pilot.cli --providers hermes_memory,lexical_baseline
 
 # Report unavailable providers as unsupported (schema-valid results, no failure)
 python -m pilot.cli --unavailable hindsight,mnemosyne
+
+# Measured lexical baseline: one isolated full-corpus run of the REAL
+# in-process Okapi BM25 ranker (results = measured / hmem-measured)
+python -m pilot.cli --mode measured --isolated \
+    --measured lexical_baseline --providers lexical_baseline \
+    --scenarios-dir pilot-out/scenarios-eval \
+    --out-dir pilot-out/measured-runs --repetitions 3 --seed 7
+
+# Aggregate N isolated measured runs into the category-first baseline report
+# (per-category mean + std across runs, provenance counts, limitations)
+python -m pilot.measured_report --runs pilot-out/measured-runs/runs \
+    --out pilot-out/measured-report
 ```
+
+### Run isolation (stale-result protection)
+
+Every invocation can write into a unique run directory with `--isolated`:
+all artifacts (manifest, results, validation_errors, report) land in
+`<out-dir>/runs/<manifest_id>/` (suffixed `-1`, `-2`, ... if the directory
+already exists), so a re-invocation can never overwrite an earlier run's
+manifest or results. `pilot/isolation.validate_run_outputs` verifies every
+result file on disk belongs to the current manifest and exactly matches the
+expected scenario/provider matrix (stale files, missing files, mismatched
+ids, schema-invalid payloads all flagged).
+
+### Measured vs simulated provenance (never conflated)
+
+- **Measured** (`measurement_kind=measured`, `provenance=hmem-measured`)
+  only for results produced by the real executed path: `--mode measured`
+  with `--measured lexical_baseline` runs the in-process Okapi BM25 ranker
+  (documented algorithm in `pilot/lexical.py`; deterministic,
+  provider-independent, stdlib only). The label is structural on the adapter
+  class (`measured=True`) — the runner cannot label a stub as measured.
+- **Simulated** (`measurement_kind=simulated`, `provenance=inferred`) for
+  all stub results (dry-run mode, including the retained lexical stub for
+  dry-run compatibility). Stubs are never relabeled.
+- The measured baseline report (`pilot/measured_report.py`) counts both
+  provenances separately and records simulated results as excluded from the
+  measured baseline.
 
 ### Full reviewed-corpus integration (30 cases, 10 categories)
 
@@ -89,10 +138,11 @@ test_convert_eval.py, 23 tests) — run `make pilot-test` (86 tests total).
 
 ```bash
 make pilot-validate   # schemas + fixtures validation
-make pilot-test       # unittest suite
+make pilot-test       # unittest suite (144 tests)
 make pilot-dryrun     # full dry run into pilot-out/
 make pilot-eval-convert   # 30-case reviewed corpus -> pilot-out/scenarios-eval
 make pilot-eval-dryrun    # convert + full-corpus dry run -> pilot-out/integration/
+make pilot-measured-baseline  # 3 isolated measured runs + category-first report
 ```
 
 ## Outputs

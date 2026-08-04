@@ -109,6 +109,46 @@ class TestUnavailableProvider(unittest.TestCase):
             self.assertEqual(errors, [])
 
 
+class TestRunIsolation(unittest.TestCase):
+    def test_isolated_run_writes_into_unique_subdir(self):
+        out_dir = tempfile.mkdtemp(prefix="hmem-iso-run-")
+        config = rn.RunConfig(
+            schema_dir=SCHEMA_DIR, scenarios_dir=SCENARIOS_DIR, out_dir=out_dir,
+            providers=["lexical_baseline"], unavailable=set(),
+            repetitions=1, seed=7, mode="dry_run", isolated=True,
+        )
+        summary = rn.run_dry_run(config)
+        run_dir = summary["run_dir"]
+        self.assertTrue(run_dir.startswith(os.path.join(out_dir, "runs")))
+        self.assertNotEqual(run_dir, out_dir)
+        self.assertTrue(os.path.isdir(os.path.join(run_dir, "state")))
+
+    def test_isolated_run_outputs_validate_clean(self):
+        out_dir = tempfile.mkdtemp(prefix="hmem-iso-val-")
+        config = rn.RunConfig(
+            schema_dir=SCHEMA_DIR, scenarios_dir=SCENARIOS_DIR, out_dir=out_dir,
+            providers=["hermes_memory"], unavailable=set(),
+            repetitions=1, seed=7, mode="dry_run", isolated=True,
+        )
+        summary = rn.run_dry_run(config)
+        run_dir = summary["run_dir"]
+        rn.write_outputs(run_dir, summary)
+        import pilot.isolation as iso
+        issues = iso.validate_run_outputs(run_dir, summary["manifest"],
+                                          summary["results"], SCHEMA_DIR)
+        self.assertEqual(issues, [])
+
+    def test_non_isolated_run_keeps_out_dir(self):
+        out_dir = tempfile.mkdtemp(prefix="hmem-plain-run-")
+        config = rn.RunConfig(
+            schema_dir=SCHEMA_DIR, scenarios_dir=SCENARIOS_DIR, out_dir=out_dir,
+            providers=["hermes_memory"], unavailable=set(),
+            repetitions=1, seed=7, mode="dry_run",
+        )
+        summary = rn.run_dry_run(config)
+        self.assertEqual(summary["run_dir"], out_dir)
+
+
 class TestScoring(unittest.TestCase):
     def test_correct_answer_scores_1(self):
         scenario = {

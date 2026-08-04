@@ -26,7 +26,7 @@
     },
     "manifest_id": { "type": "string" },
     "created_iso": { "type": "string" },
-    "mode": { "type": "string", "enum": ["dry_run", "live"] },
+    "mode": { "type": "string", "enum": ["dry_run", "live", "measured"] },
     "hermes": {
       "type": "object",
       "additionalProperties": false,
@@ -106,7 +106,12 @@
       "properties": {
         "seed": { "type": "integer" },
         "repetitions": { "type": "integer", "minimum": 1 },
-        "deterministic": { "type": "boolean" }
+        "deterministic": { "type": "boolean" },
+        "measured_providers": {
+          "description": "Provider ids that executed their REAL (measured) implementation in this run; results for these are measurement_kind=measured / provenance=hmem-measured.",
+          "type": "array",
+          "items": { "type": "string" }
+        }
       }
     },
     "generator": {

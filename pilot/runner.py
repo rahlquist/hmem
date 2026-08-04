@@ -15,6 +15,7 @@ import time
 from . import DEPLOYMENT_MODES, PILOT_VERSION, PROVIDER_IDS
 from . import adapters as ad
 from . import env
+from . import isolation
 from . import validate as v
 
 SCORE_KEYS = [
@@ -30,7 +31,8 @@ class RunConfig:
     """Declared configuration for one pilot run."""
 
     def __init__(self, schema_dir, scenarios_dir, out_dir, providers,
-                 unavailable, repetitions, seed, mode="dry_run"):
+                 unavailable, repetitions, seed, mode="dry_run",
+                 isolated=False, measured=None):
         self.schema_dir = schema_dir
         self.scenarios_dir = scenarios_dir
         self.out_dir = out_dir
@@ -39,6 +41,12 @@ class RunConfig:
         self.repetitions = repetitions
         self.seed = seed
         self.mode = mode
+        # isolated=True -> write into a unique <out_dir>/runs/<manifest_id>/
+        # directory so stale results can never contaminate a new run.
+        self.isolated = bool(isolated)
+        # Providers that execute their REAL (measured) implementation; their
+        # results are labeled measurement_kind=measured / hmem-measured.
+        self.measured = set(measured or [])
 
 
 def _git_commit():
@@ -52,19 +60,22 @@ def _git_commit():
         return "unknown"
 
 
-def _build_manifest(config, scenarios):
+def _build_manifest(config, scenarios, registry=None):
     """Pinned, schema-valid run manifest (controlled-run contract)."""
     now = env._now_iso()
     commit = _git_commit()
     splits = sorted({s.get("split", "dev") for s in scenarios}) or ["dev"]
+    registry = registry or {}
+    mode_prefix = {"measured": "measured"}.get(config.mode, "dryrun")
     return {
         "schema_version": "run_manifest@1.0.0",
-        "manifest_id": f"dryrun-{now.replace(':', '').replace('-', '')[:15]}",
+        "manifest_id": f"{mode_prefix}-{now.replace(':', '').replace('-', '')[:15]}",
         "created_iso": now,
         "mode": config.mode,
         "hermes": {"version": PILOT_VERSION, "commit": commit},
         "provider_versions": {
-            pid: {"version": "stub", "deployment_mode": DEPLOYMENT_MODES[pid]}
+            pid: {"version": getattr(registry.get(pid), "version", "stub"),
+                  "deployment_mode": DEPLOYMENT_MODES[pid]}
             for pid in PROVIDER_IDS
         },
         "budgets": {"recall_tokens": RECALL_TOKEN_BUDGET, "max_history_tokens": None},
@@ -76,7 +87,8 @@ def _build_manifest(config, scenarios):
             "scenario_count": len(scenarios),
         },
         "run": {"seed": config.seed, "repetitions": config.repetitions,
-                "deterministic": True},
+                "deterministic": True,
+                "measured_providers": sorted(config.measured)},
         "generator": {"name": "hmem-pilot", "version": PILOT_VERSION, "commit": commit},
         "environment": env.capture_environment(),
     }
@@ -190,6 +202,10 @@ def _run_scenario_provider(adapter_cls, ctx, scenario, config, manifest):
     """One scenario x provider cell. Never raises: failures become results."""
     pid = adapter_cls.provider_id
     rid = f"{manifest['manifest_id']}--{scenario['scenario_id']}--{pid}"
+    # Provenance is structural on the adapter class: only a REAL implementation
+    # (measured=True) may produce measured/hmem-measured results. Simulated
+    # stubs keep measurement_kind=simulated / provenance=inferred forever.
+    measured = bool(getattr(adapter_cls, "measured", False))
     base = {
         "schema_version": "result@1.0.0",
         "result_id": rid,
@@ -198,8 +214,8 @@ def _run_scenario_provider(adapter_cls, ctx, scenario, config, manifest):
         "provider_id": pid,
         "category": scenario.get("category"),
         "scenario_split": scenario.get("split", "dev"),
-        "measurement_kind": "simulated",
-        "provenance": "inferred",
+        "measurement_kind": "measured" if measured else "simulated",
+        "provenance": "hmem-measured" if measured else "inferred",
         "vendor": {"vendor_reported": False, "label": None, "reported_at_iso": None},
     }
 
@@ -308,7 +324,11 @@ def _run_scenario_provider(adapter_cls, ctx, scenario, config, manifest):
             scores["recovery_success"] = 1.0 if recovery["success"] else 0.0
         scores["setup_success"] = 1.0
         outcome = "ok"
-        note = "simulated deterministic run against provider adapter stub"
+        if measured:
+            note = ("measured: real in-process Okapi BM25 lexical baseline "
+                    "executed (pure-Python ranker, deterministic)")
+        else:
+            note = "simulated deterministic run against provider adapter stub"
 
     result = {**base, "outcome": outcome, "setup": {
         "success": setup_success, "steps": steps, "recovery": recovery},
@@ -329,12 +349,22 @@ def run_dry_run(config, adapter_registry=None):
     """Run every valid scenario against every configured provider.
 
     Returns a summary dict: manifest, results, validation_errors,
-    schema_errors, result_validation_errors.
+    schema_errors, result_validation_errors, run_dir.
+
+    When config.isolated is set, the run's state/work directory is a unique
+    ``<out_dir>/runs/<manifest_id>/`` directory (guaranteed not to collide
+    with any earlier run), so stale results can never contaminate it.
     """
-    registry = adapter_registry or ad.default_registry()
-    os.makedirs(config.out_dir, exist_ok=True)
-    state_dir = os.path.join(config.out_dir, "state")
-    os.makedirs(state_dir, exist_ok=True)
+    registry = dict(adapter_registry or ad.default_registry())
+    if config.measured:
+        measured_reg = ad.measured_registry()
+        missing = sorted(p for p in config.measured if p not in measured_reg)
+        if missing:
+            raise ValueError(
+                f"no measured (real) implementation registered for provider(s): "
+                f"{', '.join(missing)}")
+        for pid in config.measured:
+            registry[pid] = measured_reg[pid]
 
     schema_errors = v.schema_errors_for_dir(config.schema_dir)
     validated = v.validate_all_scenarios(config.scenarios_dir, config.schema_dir)
@@ -345,7 +375,13 @@ def run_dry_run(config, adapter_registry=None):
         with open(path, "r", encoding="utf-8") as fh:
             scenarios.append(json.load(fh))
 
-    manifest = _build_manifest(config, scenarios)
+    manifest = _build_manifest(config, scenarios, registry)
+    run_dir = config.out_dir
+    if config.isolated:
+        run_dir = isolation.unique_run_dir(config.out_dir, manifest["manifest_id"])
+    state_dir = os.path.join(run_dir, "state")
+    os.makedirs(state_dir, exist_ok=True)
+
     results = []
     result_validation_errors = {}
     for scenario in scenarios:
@@ -373,6 +409,7 @@ def run_dry_run(config, adapter_registry=None):
         "validation_errors": validation_errors,
         "schema_errors": schema_errors,
         "result_validation_errors": result_validation_errors,
+        "run_dir": run_dir,
     }
 
 

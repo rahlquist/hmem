@@ -475,3 +475,16 @@ def default_registry():
         "hindsight": HindsightAdapter,
         "mnemosyne": MnemosyneAdapter,
     }
+
+
+def measured_registry():
+    """Providers with a REAL (measured) implementation, keyed by provider id.
+
+    Only the lexical baseline has a real implementation today (a pure-Python
+    Okapi BM25 ranker executed in-process); the other providers remain
+    stub-only (measurement_kind=simulated) until real integrations exist.
+    Results produced through this registry are labeled
+    measurement_kind=measured / provenance=hmem-measured by the runner.
+    """
+    from .lexical import MeasuredLexicalBaselineAdapter
+    return {"lexical_baseline": MeasuredLexicalBaselineAdapter}
