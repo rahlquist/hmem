@@ -1,0 +1,27 @@
+{
+  "schema_version": "scenario@1.0.0",
+  "scenario_id": "synthesis-0001",
+  "category": "long_range_synthesis",
+  "split": "dev",
+  "name": "Two-session synthesis",
+  "description": "The answer requires joining a fact from one session with a fact from another. Tests long-range synthesis across sessions.",
+  "history": [
+    {"role": "user", "content": "Alice maintains project Quercus.", "session": "s1", "ts_iso": "2026-07-05T10:00:00Z"},
+    {"role": "user", "content": "Project Quercus is written in Rust.", "session": "s2", "ts_iso": "2026-07-08T10:00:00Z"}
+  ],
+  "query": "What language is Alice's project written in?",
+  "expected": {
+    "answer": "Rust",
+    "evidence_turns": [0, 1],
+    "abstain": false,
+    "premise_invalid": false
+  },
+  "provenance": {
+    "source": "hmem synthetic fixture (invented people/projects)",
+    "license": "MIT",
+    "author": "hmem pilot",
+    "created_iso": "2026-08-04T00:00:00Z",
+    "reviewed": true
+  },
+  "privacy": {"synthetic": true, "contains_real_data": false}
+}

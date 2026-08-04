@@ -1,0 +1,29 @@
+{
+  "schema_version": "scenario@1.0.0",
+  "scenario_id": "forgetting-0001",
+  "category": "selective_forgetting",
+  "split": "dev",
+  "name": "Deleted credential is excluded",
+  "description": "A token fact is explicitly deleted in a later turn. Recall must not resurface it. Tests selective forgetting and stale-memory reuse.",
+  "history": [
+    {"role": "user", "content": "The metrics service auth token is legacy-token-abc.", "session": "s1"},
+    {"role": "user", "content": "Delete the fact that the metrics service auth token is legacy-token-abc.", "session": "s2"},
+    {"role": "assistant", "content": "Done.", "session": "s2"}
+  ],
+  "query": "What is the metrics service auth token?",
+  "expected": {
+    "answer": null,
+    "evidence_turns": [],
+    "abstain": true,
+    "premise_invalid": false,
+    "deleted": "legacy-token-abc"
+  },
+  "provenance": {
+    "source": "hmem synthetic fixture (invented token value)",
+    "license": "MIT",
+    "author": "hmem pilot",
+    "created_iso": "2026-08-04T00:00:00Z",
+    "reviewed": true
+  },
+  "privacy": {"synthetic": true, "contains_real_data": false}
+}

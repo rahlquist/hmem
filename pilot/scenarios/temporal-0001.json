@@ -1,0 +1,29 @@
+{
+  "schema_version": "scenario@1.0.0",
+  "scenario_id": "temporal-0001",
+  "category": "temporal_validity",
+  "split": "dev",
+  "name": "Superseded URL, newest wins",
+  "description": "A configuration value is corrected in a later session. The current value must be returned, not the superseded one. Tests temporal validity / stale-memory reuse.",
+  "history": [
+    {"role": "user", "content": "The billing API base URL is https://billing.old.example.", "session": "s1", "ts_iso": "2026-07-01T09:00:00Z"},
+    {"role": "user", "content": "The billing API base URL is now https://billing.new.example.", "session": "s2", "ts_iso": "2026-07-02T09:00:00Z"},
+    {"role": "assistant", "content": "Updated.", "session": "s2", "ts_iso": "2026-07-02T09:00:05Z"}
+  ],
+  "query": "What is the current billing API base URL?",
+  "expected": {
+    "answer": "https://billing.new.example",
+    "evidence_turns": [1],
+    "abstain": false,
+    "premise_invalid": false,
+    "superseded": "https://billing.old.example"
+  },
+  "provenance": {
+    "source": "hmem synthetic fixture (invented URLs)",
+    "license": "MIT",
+    "author": "hmem pilot",
+    "created_iso": "2026-08-04T00:00:00Z",
+    "reviewed": true
+  },
+  "privacy": {"synthetic": true, "contains_real_data": false}
+}

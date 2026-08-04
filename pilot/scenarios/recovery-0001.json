@@ -1,0 +1,27 @@
+{
+  "schema_version": "scenario@1.0.0",
+  "scenario_id": "recovery-0001",
+  "category": "recovery",
+  "split": "dev",
+  "name": "Facts survive a simulated restart",
+  "description": "A fact is stored, the provider is restarted (state save/reload), and the fact must still be recalled. Tests restart recovery.",
+  "history": [
+    {"role": "user", "content": "The CI pipeline for the docs site uses the runner tag linux-amd64.", "session": "s1"},
+    {"role": "assistant", "content": "Logged.", "session": "s1"}
+  ],
+  "query": "What runner tag does the docs CI pipeline use?",
+  "expected": {
+    "answer": "linux-amd64",
+    "evidence_turns": [0],
+    "abstain": false,
+    "premise_invalid": false
+  },
+  "provenance": {
+    "source": "hmem synthetic fixture (invented runner tag)",
+    "license": "MIT",
+    "author": "hmem pilot",
+    "created_iso": "2026-08-04T00:00:00Z",
+    "reviewed": true
+  },
+  "privacy": {"synthetic": true, "contains_real_data": false}
+}

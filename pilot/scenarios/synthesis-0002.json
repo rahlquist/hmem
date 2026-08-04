@@ -1,0 +1,28 @@
+{
+  "schema_version": "scenario@1.0.0",
+  "scenario_id": "synthesis-0002",
+  "category": "long_range_synthesis",
+  "split": "held_out",
+  "name": "Three-hop synthesis chain",
+  "description": "The answer requires joining facts across three sessions where no single fact answers the question. Tests multi-hop long-range synthesis.",
+  "history": [
+    {"role": "user", "content": "Deirdre owns the analytics dashboard project.", "session": "s1", "ts_iso": "2026-06-10T09:00:00Z"},
+    {"role": "user", "content": "The analytics dashboard project is built on PostgreSQL.", "session": "s2", "ts_iso": "2026-06-12T09:00:00Z"},
+    {"role": "user", "content": "PostgreSQL is configured with the pgvector extension.", "session": "s3", "ts_iso": "2026-06-14T09:00:00Z"}
+  ],
+  "query": "Which extension does Deirdre's dashboard database use?",
+  "expected": {
+    "answer": "pgvector",
+    "evidence_turns": [0, 1, 2],
+    "abstain": false,
+    "premise_invalid": false
+  },
+  "provenance": {
+    "source": "hmem synthetic fixture (invented people/projects)",
+    "license": "MIT",
+    "author": "hmem pilot",
+    "created_iso": "2026-08-04T00:00:00Z",
+    "reviewed": true
+  },
+  "privacy": {"synthetic": true, "contains_real_data": false}
+}

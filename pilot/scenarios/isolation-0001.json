@@ -1,0 +1,28 @@
+{
+  "schema_version": "scenario@1.0.0",
+  "scenario_id": "isolation-0001",
+  "category": "isolation",
+  "split": "dev",
+  "name": "Profile boundary prevents leakage",
+  "description": "A fact was recorded for profile alpha; the question is asked under profile beta. Nothing must cross the profile boundary. Tests isolation.",
+  "context": {"profile": "beta"},
+  "history": [
+    {"role": "user", "content": "The canonical package mirror for profile alpha is https://mirror.alpha.internal.", "profile": "alpha", "session": "s1"},
+    {"role": "assistant", "content": "Recorded for alpha.", "session": "s1"}
+  ],
+  "query": "Which package mirror should I use?",
+  "expected": {
+    "answer": null,
+    "evidence_turns": [],
+    "abstain": true,
+    "premise_invalid": false
+  },
+  "provenance": {
+    "source": "hmem synthetic fixture (invented mirror host)",
+    "license": "MIT",
+    "author": "hmem pilot",
+    "created_iso": "2026-08-04T00:00:00Z",
+    "reviewed": true
+  },
+  "privacy": {"synthetic": true, "contains_real_data": false}
+}

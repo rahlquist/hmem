@@ -1,0 +1,13 @@
+# Local-only run outputs and virtualenvs — never publish
+.venv/
+pilot-out/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local-only source materials (PRIVACY.md PRIV-03): never commit
+memorypapers/*.pdf
+memorypapers/*.docx
+memorypapers/*.zip
+memorypapers/*.txt
+memorypapers/extracted/

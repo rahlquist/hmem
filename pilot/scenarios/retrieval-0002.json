@@ -1,0 +1,28 @@
+{
+  "schema_version": "scenario@1.0.0",
+  "scenario_id": "retrieval-0002",
+  "category": "accurate_retrieval",
+  "split": "held_out",
+  "name": "Paraphrased retrieval with distractor",
+  "description": "The same host fact must be recalled under a paraphrased question with an unrelated distractor fact present. Tests evidence retrieval under paraphrase.",
+  "history": [
+    {"role": "user", "content": "The staging database for project Quercus runs on host willow-01.", "session": "s1"},
+    {"role": "assistant", "content": "I have recorded that.", "session": "s1"},
+    {"role": "user", "content": "Also, the mail relay for the docs site is on smtp.example.net.", "session": "s1"}
+  ],
+  "query": "Can you remind me which host the Quercus staging database is hosted on?",
+  "expected": {
+    "answer": "willow-01",
+    "evidence_turns": [0],
+    "abstain": false,
+    "premise_invalid": false
+  },
+  "provenance": {
+    "source": "hmem synthetic fixture (invented hosts/services)",
+    "license": "MIT",
+    "author": "hmem pilot",
+    "created_iso": "2026-08-04T00:00:00Z",
+    "reviewed": true
+  },
+  "privacy": {"synthetic": true, "contains_real_data": false}
+}

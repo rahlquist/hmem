@@ -1,0 +1,26 @@
+{
+  "schema_version": "scenario@1.0.0",
+  "scenario_id": "premise-0001",
+  "category": "premise_awareness",
+  "split": "dev",
+  "name": "Conflicting premise is rejected",
+  "description": "The question assumes API-key auth, but memory says the service uses OAuth2 and explicitly not API keys. The provider must reject the premise rather than invent an API key. Tests premise awareness.",
+  "history": [
+    {"role": "user", "content": "The auth service uses OAuth2 tokens, not API keys.", "session": "s1"}
+  ],
+  "query": "What is the API key for the auth service?",
+  "expected": {
+    "answer": null,
+    "evidence_turns": [],
+    "abstain": true,
+    "premise_invalid": true
+  },
+  "provenance": {
+    "source": "hmem synthetic fixture",
+    "license": "MIT",
+    "author": "hmem pilot",
+    "created_iso": "2026-08-04T00:00:00Z",
+    "reviewed": true
+  },
+  "privacy": {"synthetic": true, "contains_real_data": false}
+}

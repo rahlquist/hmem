@@ -1,0 +1,32 @@
+{
+  "schema_version": "scenario@1.0.0",
+  "scenario_id": "temporal-0002",
+  "category": "temporal_validity",
+  "split": "held_out",
+  "name": "Region change among distractors",
+  "description": "A deployment region is corrected among unrelated service facts. The newest value must win over the earlier mention. Tests temporal validity with distractor density.",
+  "history": [
+    {"role": "user", "content": "The chat service uses port 5001.", "session": "s1"},
+    {"role": "user", "content": "The search service cache TTL is 300 seconds.", "session": "s1"},
+    {"role": "user", "content": "The webhook signing secret lives in vault path /kv/webhook-v1.", "session": "s1"},
+    {"role": "user", "content": "The API gateway deployment region is eu-west-1.", "session": "s2"},
+    {"role": "user", "content": "The API gateway deployment region is now us-east-1.", "session": "s3"},
+    {"role": "assistant", "content": "Region updated.", "session": "s3"}
+  ],
+  "query": "What region is the API gateway deployed in?",
+  "expected": {
+    "answer": "us-east-1",
+    "evidence_turns": [4],
+    "abstain": false,
+    "premise_invalid": false,
+    "superseded": "eu-west-1"
+  },
+  "provenance": {
+    "source": "hmem synthetic fixture (invented services/regions)",
+    "license": "MIT",
+    "author": "hmem pilot",
+    "created_iso": "2026-08-04T00:00:00Z",
+    "reviewed": true
+  },
+  "privacy": {"synthetic": true, "contains_real_data": false}
+}

@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://schemas.hmem.local/pilot/scenario.schema.json",
+  "title": "hmem pilot scenario",
+  "description": "One deterministic synthetic memory-evaluation case. Versioned via the top-level 'version' field; payloads carry schema_version '<kind>@<version>'. This is the minimal structure established by the pilot runner task; the sibling schema specification may extend it, and the harness accepts a schema-dir override so adapted documents can be dropped in.",
+  "version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "scenario_id",
+    "category",
+    "split",
+    "name",
+    "description",
+    "history",
+    "query",
+    "expected",
+    "provenance",
+    "privacy"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^scenario@[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "scenario_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "accurate_retrieval",
+        "temporal_validity",
+        "selective_forgetting",
+        "long_range_synthesis",
+        "procedural_memory",
+        "premise_awareness",
+        "isolation",
+        "abstention",
+        "poisoning_resistance",
+        "recovery"
+      ]
+    },
+    "split": {
+      "type": "string",
+      "enum": ["dev", "held_out"]
+    },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "history": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "content"],
+        "properties": {
+          "role": { "type": "string", "enum": ["user", "assistant", "system"] },
+          "content": { "type": "string" },
+          "session": { "type": "string" },
+          "ts_iso": { "type": "string" },
+          "untrusted": { "type": "boolean" },
+          "profile": { "type": "string" },
+          "host": { "type": "string" }
+        }
+      }
+    },
+    "query": { "type": "string" },
+    "context": {
+      "description": "Declared run context (current profile/host/project) the recall question is asked under.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "profile": { "type": "string" },
+        "host": { "type": "string" },
+        "project": { "type": "string" }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_turns"],
+      "properties": {
+        "answer": { "type": ["string", "null"] },
+        "evidence_turns": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "abstain": { "type": "boolean" },
+        "premise_invalid": { "type": "boolean" },
+        "superseded": { "type": ["string", "null"] },
+        "deleted": { "type": ["string", "null"] }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "license", "author", "created_iso", "reviewed"],
+      "properties": {
+        "source": { "type": "string" },
+        "license": { "type": "string" },
+        "author": { "type": "string" },
+        "created_iso": { "type": "string" },
+        "reviewed": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["synthetic", "contains_real_data"],
+      "properties": {
+        "synthetic": { "type": "boolean", "const": true },
+        "contains_real_data": { "type": "boolean", "const": false }
+      }
+    }
+  }
+}

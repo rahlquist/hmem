@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://schemas.hmem.local/pilot/run_manifest.schema.json",
+  "title": "hmem pilot run manifest",
+  "description": "Pinned, declared contract for one reproducible pilot run: versions, budgets, scenario set, seeds, and captured environment. Versioned via the top-level 'version' field; payloads carry schema_version '<kind>@<version>'.",
+  "version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "manifest_id",
+    "created_iso",
+    "mode",
+    "hermes",
+    "provider_versions",
+    "budgets",
+    "scenario_set",
+    "run",
+    "generator",
+    "environment"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^run_manifest@[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "manifest_id": { "type": "string" },
+    "created_iso": { "type": "string" },
+    "mode": { "type": "string", "enum": ["dry_run", "live"] },
+    "hermes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "commit"],
+      "properties": {
+        "version": { "type": "string" },
+        "commit": { "type": "string" }
+      }
+    },
+    "provider_versions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hermes_memory", "lexical_baseline", "hindsight", "mnemosyne"],
+      "properties": {
+        "hermes_memory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "deployment_mode"],
+          "properties": {
+            "version": { "type": "string" },
+            "deployment_mode": { "type": "string" }
+          }
+        },
+        "lexical_baseline": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "deployment_mode"],
+          "properties": {
+            "version": { "type": "string" },
+            "deployment_mode": { "type": "string" }
+          }
+        },
+        "hindsight": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "deployment_mode"],
+          "properties": {
+            "version": { "type": "string" },
+            "deployment_mode": { "type": "string" }
+          }
+        },
+        "mnemosyne": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "deployment_mode"],
+          "properties": {
+            "version": { "type": "string" },
+            "deployment_mode": { "type": "string" }
+          }
+        }
+      }
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recall_tokens"],
+      "properties": {
+        "recall_tokens": { "type": "integer", "minimum": 0 },
+        "max_history_tokens": { "type": ["integer", "null"] }
+      }
+    },
+    "scenario_set": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "split", "scenario_count"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "split": { "type": "string" },
+        "scenario_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seed", "repetitions", "deterministic"],
+      "properties": {
+        "seed": { "type": "integer" },
+        "repetitions": { "type": "integer", "minimum": 1 },
+        "deterministic": { "type": "boolean" }
+      }
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "commit"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "commit": { "type": "string" }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "python_version", "machine", "cpu_count", "captured_iso"],
+      "properties": {
+        "os": { "type": "string" },
+        "python_version": { "type": "string" },
+        "machine": { "type": "string" },
+        "cpu_count": { "type": "integer" },
+        "captured_iso": { "type": "string" }
+      }
+    }
+  }
+}

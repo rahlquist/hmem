@@ -1,0 +1,27 @@
+{
+  "schema_version": "scenario@1.0.0",
+  "scenario_id": "procedural-0001",
+  "category": "procedural_memory",
+  "split": "dev",
+  "name": "Recover a discovered procedure",
+  "description": "A multi-step fix discovered through a failure must be reusable on demand. Tests procedural memory.",
+  "history": [
+    {"role": "user", "content": "When the nightly backup fails with exit code 3, first check disk space on /var/backup, then re-run with --force.", "session": "s1"},
+    {"role": "assistant", "content": "Understood.", "session": "s1"}
+  ],
+  "query": "What should I do if the nightly backup fails?",
+  "expected": {
+    "answer": "check disk space on /var/backup then re-run with --force",
+    "evidence_turns": [0],
+    "abstain": false,
+    "premise_invalid": false
+  },
+  "provenance": {
+    "source": "hmem synthetic fixture (invented ops procedure)",
+    "license": "MIT",
+    "author": "hmem pilot",
+    "created_iso": "2026-08-04T00:00:00Z",
+    "reviewed": true
+  },
+  "privacy": {"synthetic": true, "contains_real_data": false}
+}

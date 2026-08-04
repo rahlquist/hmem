@@ -1,0 +1,27 @@
+{
+  "schema_version": "scenario@1.0.0",
+  "scenario_id": "retrieval-0001",
+  "category": "accurate_retrieval",
+  "split": "dev",
+  "name": "Direct fact retrieval",
+  "description": "A supplied host fact must be recalled despite surrounding chatter. Tests evidence retrieval with no paraphrase.",
+  "history": [
+    {"role": "user", "content": "The staging database for project Quercus runs on host willow-01, not beech-02.", "session": "s1"},
+    {"role": "assistant", "content": "Noted.", "session": "s1"}
+  ],
+  "query": "Which host runs the Quercus staging database?",
+  "expected": {
+    "answer": "willow-01",
+    "evidence_turns": [0],
+    "abstain": false,
+    "premise_invalid": false
+  },
+  "provenance": {
+    "source": "hmem synthetic fixture (invented hosts/services)",
+    "license": "MIT",
+    "author": "hmem pilot",
+    "created_iso": "2026-08-04T00:00:00Z",
+    "reviewed": true
+  },
+  "privacy": {"synthetic": true, "contains_real_data": false}
+}

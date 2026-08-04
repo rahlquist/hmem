@@ -1,0 +1,232 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://schemas.hmem.local/pilot/result.schema.json",
+  "title": "hmem pilot result",
+  "description": "One scenario x provider raw result. Failures and unavailability are retained as first-class outcomes, not discarded. measurement_kind separates dry-run simulation from real hmem measurements; provenance/vendor fields separate claim provenance and vendor-reported labels. Versioned via the top-level 'version' field; payloads carry schema_version '<kind>@<version>'.",
+  "version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "result_id",
+    "manifest_id",
+    "scenario_id",
+    "provider_id",
+    "category",
+    "scenario_split",
+    "measurement_kind",
+    "provenance",
+    "vendor",
+    "outcome",
+    "setup",
+    "measurements",
+    "scores"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^result@[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "result_id": { "type": "string" },
+    "manifest_id": { "type": "string" },
+    "scenario_id": { "type": "string" },
+    "provider_id": {
+      "type": "string",
+      "enum": ["hermes_memory", "lexical_baseline", "hindsight", "mnemosyne"]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "accurate_retrieval",
+        "temporal_validity",
+        "selective_forgetting",
+        "long_range_synthesis",
+        "procedural_memory",
+        "premise_awareness",
+        "isolation",
+        "abstention",
+        "poisoning_resistance",
+        "recovery"
+      ]
+    },
+    "scenario_split": { "type": "string", "enum": ["dev", "held_out"] },
+    "measurement_kind": {
+      "type": "string",
+      "enum": ["simulated", "measured", "vendor_reported"]
+    },
+    "provenance": {
+      "type": "string",
+      "enum": [
+        "hmem-measured",
+        "independently-reproduced",
+        "vendor-documented",
+        "vendor-benchmark",
+        "community-reported",
+        "inferred",
+        "unknown"
+      ]
+    },
+    "vendor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vendor_reported", "label", "reported_at_iso"],
+      "properties": {
+        "vendor_reported": { "type": "boolean" },
+        "label": { "type": ["string", "null"] },
+        "reported_at_iso": { "type": ["string", "null"] }
+      }
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["ok", "failure", "unsupported", "setup_failed", "skipped"]
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "error_type", "message"],
+      "properties": {
+        "stage": {
+          "type": "string",
+          "enum": ["availability", "setup", "ingest", "recall", "recovery", "teardown", "scoring"]
+        },
+        "error_type": { "type": "string" },
+        "message": { "type": "string" },
+        "detail": { "type": "string" }
+      }
+    },
+    "setup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["success", "steps", "recovery"],
+      "properties": {
+        "success": { "type": "boolean" },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "status", "detail"],
+            "properties": {
+              "name": { "type": "string" },
+              "status": { "type": "string", "enum": ["ok", "failed", "skipped"] },
+              "detail": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "recovery": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["attempted", "success", "detail"],
+          "properties": {
+            "attempted": { "type": "boolean" },
+            "success": { "type": "boolean" },
+            "detail": { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+    "measurements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["latency_ms", "ingest_latency_ms", "recall_latency_ms", "tokens", "resources"],
+      "properties": {
+        "latency_ms": {
+          "description": "Round-trip (ingest + recall) latency per repetition.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["p50", "p95", "n", "samples"],
+          "properties": {
+            "p50": { "type": ["number", "null"] },
+            "p95": { "type": ["number", "null"] },
+            "n": { "type": "integer", "minimum": 0 },
+            "samples": { "type": "array", "items": { "type": "number" } }
+          }
+        },
+        "ingest_latency_ms": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["p50", "p95", "n", "samples"],
+          "properties": {
+            "p50": { "type": ["number", "null"] },
+            "p95": { "type": ["number", "null"] },
+            "n": { "type": "integer", "minimum": 0 },
+            "samples": { "type": "array", "items": { "type": "number" } }
+          }
+        },
+        "recall_latency_ms": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["p50", "p95", "n", "samples"],
+          "properties": {
+            "p50": { "type": ["number", "null"] },
+            "p95": { "type": ["number", "null"] },
+            "n": { "type": "integer", "minimum": 0 },
+            "samples": { "type": "array", "items": { "type": "number" } }
+          }
+        },
+        "tokens": {
+          "description": "Whitespace-token estimates; not provider tokenizer output.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["stored", "retrieved", "injected"],
+          "properties": {
+            "stored": { "type": "integer", "minimum": 0 },
+            "retrieved": { "type": "integer", "minimum": 0 },
+            "injected": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cpu_percent", "peak_ram_mb", "disk_growth_mb", "network_egress_bytes"],
+          "properties": {
+            "cpu_percent": { "type": ["number", "null"] },
+            "peak_ram_mb": { "type": ["number", "null"] },
+            "disk_growth_mb": { "type": ["number", "null"] },
+            "network_egress_bytes": { "type": ["number", "null"] }
+          }
+        }
+      }
+    },
+    "answer": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["text", "evidence_turns", "abstained"],
+      "properties": {
+        "text": { "type": ["string", "null"] },
+        "evidence_turns": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "abstained": { "type": "boolean" },
+        "premise_invalid": { "type": "boolean" }
+      }
+    },
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "correctness",
+        "evidence_precision",
+        "evidence_recall",
+        "stale_reuse",
+        "leakage",
+        "abstention_correct",
+        "poisoning_success",
+        "synthesis",
+        "recovery_success",
+        "setup_success"
+      ],
+      "properties": {
+        "correctness": { "type": ["number", "null"] },
+        "evidence_precision": { "type": ["number", "null"] },
+        "evidence_recall": { "type": ["number", "null"] },
+        "stale_reuse": { "type": ["number", "null"] },
+        "leakage": { "type": ["number", "null"] },
+        "abstention_correct": { "type": ["number", "null"] },
+        "poisoning_success": { "type": ["number", "null"] },
+        "synthesis": { "type": ["number", "null"] },
+        "recovery_success": { "type": ["number", "null"] },
+        "setup_success": { "type": ["number", "null"] }
+      }
+    },
+    "scoring_note": { "type": "string" }
+  }
+}

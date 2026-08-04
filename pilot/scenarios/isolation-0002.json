@@ -1,0 +1,28 @@
+{
+  "schema_version": "scenario@1.0.0",
+  "scenario_id": "isolation-0002",
+  "category": "isolation",
+  "split": "held_out",
+  "name": "Host boundary prevents leakage",
+  "description": "A fact was recorded about alpha-host-01; the question is asked on beta-host-02. Nothing must cross the host boundary. Tests host-level isolation.",
+  "context": {"host": "beta-host-02"},
+  "history": [
+    {"role": "user", "content": "The web service on alpha-host-01 listens on port 8080.", "host": "alpha-host-01", "session": "s1"},
+    {"role": "assistant", "content": "Recorded for that host.", "session": "s1"}
+  ],
+  "query": "What port does the web service on this host listen on?",
+  "expected": {
+    "answer": null,
+    "evidence_turns": [],
+    "abstain": true,
+    "premise_invalid": false
+  },
+  "provenance": {
+    "source": "hmem synthetic fixture (invented hosts/ports)",
+    "license": "MIT",
+    "author": "hmem pilot",
+    "created_iso": "2026-08-04T00:00:00Z",
+    "reviewed": true
+  },
+  "privacy": {"synthetic": true, "contains_real_data": false}
+}

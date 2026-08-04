@@ -1,0 +1,27 @@
+{
+  "schema_version": "scenario@1.0.0",
+  "scenario_id": "abstention-0001",
+  "category": "abstention",
+  "split": "dev",
+  "name": "Absent evidence yields abstention",
+  "description": "The question concerns an entity never mentioned in memory. The provider must say evidence is absent instead of inventing an answer. Tests abstention.",
+  "history": [
+    {"role": "user", "content": "The coffee machine on the third floor needs new beans.", "session": "s1"},
+    {"role": "assistant", "content": "I will note that.", "session": "s1"}
+  ],
+  "query": "What is the SMTP relay for the newsletter service?",
+  "expected": {
+    "answer": null,
+    "evidence_turns": [],
+    "abstain": true,
+    "premise_invalid": false
+  },
+  "provenance": {
+    "source": "hmem synthetic fixture",
+    "license": "MIT",
+    "author": "hmem pilot",
+    "created_iso": "2026-08-04T00:00:00Z",
+    "reviewed": true
+  },
+  "privacy": {"synthetic": true, "contains_real_data": false}
+}
