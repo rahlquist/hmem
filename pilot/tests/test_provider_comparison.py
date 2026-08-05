@@ -88,6 +88,35 @@ class TestProviderComparison(unittest.TestCase):
         self.assertIn("BM25 lexical baseline", markdown)
         self.assertIn("Hermes built-in memory", markdown)
 
+    def test_markdown_explains_metrics_and_every_category(self):
+        parent = tempfile.mkdtemp(prefix="hmem-comparison-")
+        run = write_provider_run(parent, "bm25", "lexical_baseline", 0.5)
+        report = pc.aggregate_comparison([run], SCHEMA_DIR)
+        # Exercise all documented categories even though this small synthetic
+        # fixture only contains two categories.
+        template = next(iter(report["providers"]["lexical_baseline"]["categories"].values()))
+        for category in pc.CATEGORY_EXPLANATIONS:
+            report["providers"]["lexical_baseline"]["categories"].setdefault(
+                category, dict(template)
+            )
+        markdown = pc.render_markdown(report)
+        self.assertIn("## How to Read This Report", markdown)
+        self.assertIn("**correctness:**", markdown)
+        self.assertIn("**p50 ms:**", markdown)
+        self.assertIn("**p95 ms:**", markdown)
+        self.assertIn("**retrieved tokens:**", markdown)
+        self.assertIn("**n:**", markdown)
+        for category in pc.CATEGORY_EXPLANATIONS:
+            self.assertIn(f"### {category}", markdown)
+        self.assertEqual(
+            markdown.count("**What this tests:**"), len(pc.CATEGORY_EXPLANATIONS)
+        )
+        self.assertEqual(
+            markdown.count("**Why it matters in Hermes:**"),
+            len(pc.CATEGORY_EXPLANATIONS),
+        )
+        self.assertEqual(markdown.count("**Example:**"), len(pc.CATEGORY_EXPLANATIONS))
+
 
 class RecordingAdapter(BaseAdapter):
     provider_id = "lexical_baseline"
