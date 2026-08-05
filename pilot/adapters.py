@@ -480,11 +480,18 @@ def default_registry():
 def measured_registry():
     """Providers with a REAL (measured) implementation, keyed by provider id.
 
-    Only the lexical baseline has a real implementation today (a pure-Python
-    Okapi BM25 ranker executed in-process); the other providers remain
-    stub-only (measurement_kind=simulated) until real integrations exist.
+    Two measured implementations exist today:
+      - lexical_baseline: a pure-Python Okapi BM25 ranker executed in-process
+      - hermes_memory: real file I/O to a disposable HERMES_HOME (MEMORY.md)
+
+    The other providers (hindsight, mnemosyne) remain stub-only
+    (measurement_kind=simulated) until real integrations exist.
     Results produced through this registry are labeled
     measurement_kind=measured / provenance=hmem-measured by the runner.
     """
     from .lexical import MeasuredLexicalBaselineAdapter
-    return {"lexical_baseline": MeasuredLexicalBaselineAdapter}
+    from .hermes_memory import MeasuredHermesMemoryAdapter
+    return {
+        "lexical_baseline": MeasuredLexicalBaselineAdapter,
+        "hermes_memory": MeasuredHermesMemoryAdapter,
+    }

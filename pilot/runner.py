@@ -325,8 +325,12 @@ def _run_scenario_provider(adapter_cls, ctx, scenario, config, manifest):
         scores["setup_success"] = 1.0
         outcome = "ok"
         if measured:
-            note = ("measured: real in-process Okapi BM25 lexical baseline "
-                    "executed (pure-Python ranker, deterministic)")
+            note = getattr(
+                adapter_cls, "measured_note", None,
+            ) or (
+                "measured: real in-process Okapi BM25 lexical baseline "
+                "executed (pure-Python ranker, deterministic)"
+            )
         else:
             note = "simulated deterministic run against provider adapter stub"
 

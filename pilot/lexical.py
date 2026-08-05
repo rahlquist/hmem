@@ -155,6 +155,10 @@ class MeasuredLexicalBaselineAdapter(ad.BaseAdapter):
     integration_state = "in_process_baseline"
     version = BM25_VERSION
     measured = True
+    measured_note = (
+        "measured: real in-process Okapi BM25 lexical baseline "
+        "executed (pure-Python ranker, deterministic)"
+    )
     policy = {
         "newest_wins": False, "forgets": False, "synthesizes": False,
         "premise_aware": False, "boundary_aware": False, "trust_aware": False,
