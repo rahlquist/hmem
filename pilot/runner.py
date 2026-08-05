@@ -396,13 +396,20 @@ def run_dry_run(config, adapter_registry=None):
     results = []
     result_validation_errors = {}
     for scenario in scenarios:
-        ctx = ad.AdapterContext(
-            work_dir=state_dir,
-            seed=config.seed, scenario=scenario,
-            budgets={"recall_tokens": RECALL_TOKEN_BUDGET},
-            profile="default", unavailable=config.unavailable,
-        )
         for pid in config.providers:
+            # Every scenario/provider cell gets fresh state. This prevents a
+            # persistent adapter (notably Hermes MEMORY.md) from leaking facts
+            # across independent benchmark cells.
+            cell_dir = os.path.join(
+                state_dir, scenario["scenario_id"], pid,
+            )
+            os.makedirs(cell_dir, exist_ok=True)
+            ctx = ad.AdapterContext(
+                work_dir=cell_dir,
+                seed=config.seed, scenario=scenario,
+                budgets={"recall_tokens": RECALL_TOKEN_BUDGET},
+                profile="default", unavailable=config.unavailable,
+            )
             adapter_cls = registry.get(pid)
             if adapter_cls is None:
                 err_list = result_validation_errors.setdefault("unknown-provider", [])

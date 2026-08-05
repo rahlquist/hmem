@@ -6,7 +6,7 @@
 PY ?= python3
 PILOT = $(PY) -m pilot
 
-.PHONY: pilot-validate pilot-test pilot-dryrun pilot-eval-convert pilot-eval-dryrun pilot-measured-baseline pilot-clean
+.PHONY: pilot-validate pilot-test pilot-dryrun pilot-eval-convert pilot-eval-dryrun pilot-measured-baseline pilot-provider-comparison pilot-clean
 
 pilot-validate:
 	$(PILOT).cli --validate-only
@@ -48,6 +48,24 @@ pilot-measured-baseline:
 	done
 	$(PILOT).measured_report --runs pilot-out/measured-runs/runs \
 		--out pilot-out/measured-report
+
+# Measured provider comparison: three isolated runs over the same 30-case
+# corpus, with both real measured adapters executing in every run. The
+# comparison report excludes simulated providers and lists them explicitly as
+# not measured.
+pilot-provider-comparison:
+	$(PILOT).convert_eval --out pilot-out/scenarios-eval
+	for i in 1 2 3; do \
+		$(PILOT).cli --mode measured --isolated \
+			--measured lexical_baseline,hermes_memory \
+			--providers lexical_baseline,hermes_memory \
+			--scenarios-dir pilot-out/scenarios-eval \
+			--out-dir pilot-out/provider-comparison-runs \
+			--repetitions 3 --seed 7; \
+	done
+	$(PILOT).provider_comparison \
+		--runs pilot-out/provider-comparison-runs/runs \
+		--out pilot-out/provider-comparison
 
 pilot-clean:
 	rm -rf pilot-out
