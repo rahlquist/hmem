@@ -6,6 +6,7 @@ as unsupported (schema-valid results), and produces a pinned run manifest
 plus per-result payloads. No real providers, network, or secrets are touched
 in dry-run mode.
 """
+import datetime
 import json
 import os
 import statistics
@@ -67,9 +68,15 @@ def _build_manifest(config, scenarios, registry=None):
     splits = sorted({s.get("split", "dev") for s in scenarios}) or ["dev"]
     registry = registry or {}
     mode_prefix = {"measured": "measured"}.get(config.mode, "dryrun")
+    # Include microseconds in the manifest_id so two runs started within the
+    # same second still get distinct ids (fixes the isolated-run collision that
+    # occurs when a test invokes the CLI twice in rapid succession).
+    now_compact = now.replace(":", "").replace("-", "")
+    # now_compact looks like "20260805T032612Z" (15 chars); append microseconds.
+    now_us = datetime.datetime.now(datetime.timezone.utc).strftime("%f")
     return {
         "schema_version": "run_manifest@1.0.0",
-        "manifest_id": f"{mode_prefix}-{now.replace(':', '').replace('-', '')[:15]}",
+        "manifest_id": f"{mode_prefix}-{now_compact[:15]}-{now_us}",
         "created_iso": now,
         "mode": config.mode,
         "hermes": {"version": PILOT_VERSION, "commit": commit},

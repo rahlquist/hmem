@@ -373,5 +373,692 @@ class TestTeardown(unittest.TestCase):
         runner.teardown()  # should not raise
 
 
+# ---------------------------------------------------------------------------
+# Extended tests: edge cases, error handling, CLI, benchmark command.
+# ---------------------------------------------------------------------------
+
+class TestContainerConfigEdgeCases(unittest.TestCase):
+    """ContainerConfig: custom values, boundary conditions."""
+
+    def test_custom_network_mode(self):
+        cfg = cr.ContainerConfig(image="test:latest", network_mode="bridge")
+        args = cfg.to_docker_args("/tmp/s", "/tmp/o", "/tmp/h")
+        idx = args.index("--network")
+        self.assertEqual(args[idx + 1], "bridge")
+
+    def test_custom_memory_limit(self):
+        cfg = cr.ContainerConfig(image="test:latest", memory_limit="2g")
+        args = cfg.to_docker_args("/tmp/s", "/tmp/o", "/tmp/h")
+        idx = args.index("--memory")
+        self.assertEqual(args[idx + 1], "2g")
+
+    def test_custom_cpu_quota(self):
+        cfg = cr.ContainerConfig(image="test:latest", cpu_quota="2.0")
+        args = cfg.to_docker_args("/tmp/s", "/tmp/o", "/tmp/h")
+        self.assertIn("--cpus=2.0", args)
+
+    def test_custom_pid_limit(self):
+        cfg = cr.ContainerConfig(image="test:latest", pid_limit="256")
+        args = cfg.to_docker_args("/tmp/s", "/tmp/o", "/tmp/h")
+        self.assertIn("--pids-limit=256", args)
+
+    def test_custom_run_timeout(self):
+        cfg = cr.ContainerConfig(image="test:latest", run_timeout=300)
+        self.assertEqual(cfg.run_timeout, 300)
+
+    def test_empty_image_tag(self):
+        """An empty image tag is valid dataclass state (validation is at runtime)."""
+        cfg = cr.ContainerConfig(image="")
+        self.assertEqual(cfg.image, "")
+
+    def test_to_docker_args_absolute_paths(self):
+        """Bind mounts should use absolute paths."""
+        cfg = cr.ContainerConfig(image="test:latest")
+        args = cfg.to_docker_args("relative/scenarios", "relative/out",
+                                  "/tmp/hermes-home")
+        vol_args = [args[i + 1] for i, a in enumerate(args) if a == "-v"]
+        for v in vol_args:
+            # The host-side path (before the colon) should be absolute
+            host_path = v.split(":")[0]
+            self.assertTrue(os.path.isabs(host_path),
+                            f"host path {host_path} should be absolute, got: {v}")
+
+    def test_to_docker_create_args_matches_run_except_no_rm(self):
+        """docker create args should have same content as docker run minus --rm."""
+        cfg = cr.ContainerConfig(image="test:latest")
+        run_args = cfg.to_docker_args("/tmp/s", "/tmp/o", "/tmp/h",
+                                      command=["echo", "hi"])
+        create_args = cfg.to_docker_create_args("/tmp/s", "/tmp/o", "/tmp/h",
+                                                command=["echo", "hi"])
+        # create should not have --rm
+        self.assertNotIn("--rm", create_args)
+        # create should have 'create' not 'run'
+        self.assertIn("create", create_args)
+        self.assertIn("run", run_args)
+        # Both should reference the image
+        self.assertIn("test:latest", create_args)
+        self.assertIn("test:latest", run_args)
+
+    def test_read_only_root_in_create_args(self):
+        cfg = cr.ContainerConfig(image="test:latest", read_only_root=True)
+        args = cfg.to_docker_create_args("/tmp/s", "/tmp/o", "/tmp/h")
+        self.assertIn("--read-only", args)
+
+    def test_extra_env_in_create_args(self):
+        cfg = cr.ContainerConfig(
+            image="test:latest",
+            extra_env={"DEBUG": "1", "LOG_LEVEL": "warn"},
+        )
+        args = cfg.to_docker_create_args("/tmp/s", "/tmp/o", "/tmp/h")
+        env_args = [args[i + 1] for i, a in enumerate(args) if a == "-e"]
+        self.assertIn("DEBUG=1", env_args)
+        self.assertIn("LOG_LEVEL=warn", env_args)
+
+
+class TestContainerResultEdgeCases(unittest.TestCase):
+    """ContainerResult: dry-run ok, edge cases."""
+
+    def test_dry_run_ok(self):
+        r = cr.ContainerResult(scenario_id="s1", dry_run=True,
+                                created=True, destroyed=True)
+        self.assertTrue(r.ok())
+
+    def test_dry_run_not_ok_without_created(self):
+        r = cr.ContainerResult(scenario_id="s1", dry_run=True,
+                                created=False, destroyed=True)
+        self.assertFalse(r.ok())
+
+    def test_dry_run_not_ok_without_destroyed(self):
+        r = cr.ContainerResult(scenario_id="s1", dry_run=True,
+                                created=True, destroyed=False)
+        self.assertFalse(r.ok())
+
+    def test_summary_dry_run(self):
+        r = cr.ContainerResult(scenario_id="dry-1", dry_run=True,
+                                created=True, destroyed=True, duration_sec=0.5)
+        s = r.summary()
+        self.assertIn("[ok]", s)
+        self.assertIn("dry-1", s)
+
+    def test_summary_no_exit_code(self):
+        r = cr.ContainerResult(scenario_id="s2", ran=False)
+        s = r.summary()
+        self.assertIn("[failed]", s)
+        # exit= should NOT appear when exit_code is None
+        self.assertNotIn("exit=", s)
+
+    def test_ok_with_nonzero_exit(self):
+        r = cr.ContainerResult(scenario_id="s3", exit_code=42, ran=True)
+        self.assertFalse(r.ok())
+
+    def test_result_dict_fields(self):
+        r = cr.ContainerResult(scenario_id="s4", exit_code=0, ran=True,
+                                duration_sec=1.2, stdout="hello",
+                                stderr="world")
+        d = r.__dict__
+        self.assertEqual(d["scenario_id"], "s4")
+        self.assertEqual(d["exit_code"], 0)
+        self.assertEqual(d["stdout"], "hello")
+        self.assertEqual(d["stderr"], "world")
+        self.assertTrue(d["ran"])
+        self.assertFalse(d["dry_run"])
+
+
+class TestBenchmarkCommand(unittest.TestCase):
+    """ContainerRunner._benchmark_command: structure and content."""
+
+    def test_command_uses_bash(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+        )
+        cmd = runner._benchmark_command("scenario-001.json")
+        self.assertEqual(cmd[0], "/bin/bash")
+        self.assertEqual(cmd[1], "-c")
+
+    def test_command_includes_scenario_filename(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+        )
+        cmd = runner._benchmark_command("my-scenario.json")
+        self.assertIn("my-scenario.json", cmd[2])
+
+    def test_command_includes_pilot_cli(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+        )
+        cmd = runner._benchmark_command("s.json")
+        self.assertIn("python3 -m pilot.cli", cmd[2])
+
+    def test_command_includes_providers(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+            providers="hermes_memory,lexical_baseline",
+        )
+        cmd = runner._benchmark_command("s.json")
+        self.assertIn("--providers hermes_memory,lexical_baseline", cmd[2])
+
+    def test_command_includes_repetitions_and_seed(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+            repetitions=5, seed=42,
+        )
+        cmd = runner._benchmark_command("s.json")
+        self.assertIn("--repetitions 5", cmd[2])
+        self.assertIn("--seed 42", cmd[2])
+
+    def test_command_uses_container_paths(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+        )
+        cmd = runner._benchmark_command("s.json")
+        self.assertIn(cr.CONTAINER_SCENARIOS_DIR, cmd[2])
+        self.assertIn(cr.CONTAINER_RESULTS_DIR, cmd[2])
+
+    def test_command_cd_to_hmem(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+        )
+        cmd = runner._benchmark_command("s.json")
+        self.assertIn("cd /opt/hmem", cmd[2])
+
+
+class TestScenarioDiscovery(unittest.TestCase):
+    """ContainerRunner scenario discovery edge cases."""
+
+    def test_scenario_paths_sorted(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+        )
+        paths = runner.scenario_paths()
+        self.assertEqual(paths, sorted(paths))
+
+    def test_scenario_paths_excludes_hidden(self):
+        """Hidden files (starting with .) should not be in scenario paths."""
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+        )
+        paths = runner.scenario_paths()
+        for p in paths:
+            self.assertFalse(os.path.basename(p).startswith("."))
+
+    def test_scenario_paths_excludes_non_json(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+        )
+        paths = runner.scenario_paths()
+        for p in paths:
+            self.assertTrue(p.endswith(".json"))
+
+    def test_load_scenario_id_fallback_on_bad_json(self):
+        """_load_scenario_id should return filename on bad JSON."""
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False,
+        ) as fh:
+            fh.write("{invalid json")
+            tmp_path = fh.name
+        try:
+            runner = cr.ContainerRunner(
+                cr.ContainerConfig(image="test:latest"),
+                scenarios_dir=SCENARIOS_DIR,
+            )
+            sid = runner._load_scenario_id(tmp_path)
+            self.assertEqual(sid, os.path.basename(tmp_path))
+        finally:
+            os.unlink(tmp_path)
+
+    def test_load_scenario_id_uses_field(self):
+        """_load_scenario_id should read scenario_id from valid JSON."""
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False,
+        ) as fh:
+            json.dump({"scenario_id": "custom-id-123"}, fh)
+            tmp_path = fh.name
+        try:
+            runner = cr.ContainerRunner(
+                cr.ContainerConfig(image="test:latest"),
+                scenarios_dir=SCENARIOS_DIR,
+            )
+            sid = runner._load_scenario_id(tmp_path)
+            self.assertEqual(sid, "custom-id-123")
+        finally:
+            os.unlink(tmp_path)
+
+
+class TestDryRunErrorHandling(unittest.TestCase):
+    """Dry-run lifecycle error handling with mocked Docker failures."""
+
+    @mock.patch("subprocess.run")
+    def test_dry_run_create_failure(self, mock_run):
+        """Dry run should capture error when docker create fails."""
+        class FakeResult:
+            def __init__(self, code, out, err):
+                self.returncode = code
+                self.stdout = out
+                self.stderr = err
+                self.args = []
+
+        mock_run.return_value = FakeResult(1, "", "docker create error: image not found\n")
+        cfg = cr.ContainerConfig(image="test:latest")
+        runner = cr.ContainerRunner(cfg, scenarios_dir=SCENARIOS_DIR)
+        paths = runner.scenario_paths()
+        out_dir = tempfile.mkdtemp()
+        result = runner.run_scenario(paths[0], out_dir, dry_run=True)
+        self.assertFalse(result.created)
+        self.assertIsNotNone(result.error)
+        self.assertIn("docker create failed", result.error)
+
+    @mock.patch("subprocess.run")
+    def test_dry_run_empty_container_id(self, mock_run):
+        """Dry run should error when docker create returns empty ID."""
+        class FakeResult:
+            def __init__(self, code, out, err):
+                self.returncode = code
+                self.stdout = out
+                self.stderr = err
+                self.args = []
+
+        # First call (docker create) returns empty stdout.
+        mock_run.return_value = FakeResult(0, "\n", "")
+        cfg = cr.ContainerConfig(image="test:latest")
+        runner = cr.ContainerRunner(cfg, scenarios_dir=SCENARIOS_DIR)
+        paths = runner.scenario_paths()
+        out_dir = tempfile.mkdtemp()
+        result = runner.run_scenario(paths[0], out_dir, dry_run=True)
+        self.assertFalse(result.created)
+        self.assertIsNotNone(result.error)
+        self.assertIn("empty container ID", result.error)
+
+    @mock.patch("subprocess.run")
+    def test_dry_run_inspect_failure(self, mock_run):
+        """Dry run should capture error when docker inspect fails."""
+        class FakeResult:
+            def __init__(self, code, out, err):
+                self.returncode = code
+                self.stdout = out
+                self.stderr = err
+                self.args = []
+
+        class FakeSequence:
+            def __init__(self):
+                self._calls = [
+                    # docker create succeeds
+                    FakeResult(0, "abc123def456\n", ""),
+                    # docker inspect fails
+                    FakeResult(1, "", "container not found\n"),
+                    # docker rm (cleanup) succeeds
+                    FakeResult(0, "abc123def456\n", ""),
+                ]
+                self._idx = 0
+
+            def __call__(self, *args, **kwargs):
+                r = self._calls[self._idx]
+                self._idx += 1
+                return r
+
+        mock_run.side_effect = FakeSequence()
+        cfg = cr.ContainerConfig(image="test:latest")
+        runner = cr.ContainerRunner(cfg, scenarios_dir=SCENARIOS_DIR)
+        paths = runner.scenario_paths()
+        out_dir = tempfile.mkdtemp()
+        result = runner.run_scenario(paths[0], out_dir, dry_run=True)
+        self.assertTrue(result.created)
+        self.assertIsNotNone(result.error)
+        self.assertIn("docker inspect failed", result.error)
+        # Should still attempt cleanup
+        self.assertTrue(result.destroyed)
+
+    @mock.patch("subprocess.run")
+    def test_dry_run_rm_failure(self, mock_run):
+        """Dry run should capture error when docker rm fails."""
+        class FakeResult:
+            def __init__(self, code, out, err):
+                self.returncode = code
+                self.stdout = out
+                self.stderr = err
+                self.args = []
+
+        class FakeSequence:
+            def __init__(self):
+                self._calls = [
+                    FakeResult(0, "abc123def456\n", ""),       # create
+                    FakeResult(0, "abc123def456\n", ""),       # inspect
+                    FakeResult(1, "", "rm failed\n"),          # rm
+                ]
+                self._idx = 0
+
+            def __call__(self, *args, **kwargs):
+                r = self._calls[self._idx]
+                self._idx += 1
+                return r
+
+        mock_run.side_effect = FakeSequence()
+        cfg = cr.ContainerConfig(image="test:latest")
+        runner = cr.ContainerRunner(cfg, scenarios_dir=SCENARIOS_DIR)
+        paths = runner.scenario_paths()
+        out_dir = tempfile.mkdtemp()
+        result = runner.run_scenario(paths[0], out_dir, dry_run=True)
+        self.assertTrue(result.created)
+        self.assertIsNotNone(result.error)
+        self.assertIn("docker rm failed", result.error)
+        self.assertFalse(result.destroyed)
+
+
+class TestFullRunErrorHandling(unittest.TestCase):
+    """Full run lifecycle error handling."""
+
+    @mock.patch("subprocess.run")
+    def test_full_run_nonzero_exit(self, mock_run):
+        class FakeResult:
+            def __init__(self, code, out, err):
+                self.returncode = code
+                self.stdout = out
+                self.stderr = err
+                self.args = []
+
+        mock_run.return_value = FakeResult(1, "some output\n", "error\n")
+        cfg = cr.ContainerConfig(image="test:latest")
+        runner = cr.ContainerRunner(cfg, scenarios_dir=SCENARIOS_DIR)
+        paths = runner.scenario_paths()
+        out_dir = tempfile.mkdtemp()
+        result = runner.run_scenario(paths[0], out_dir, dry_run=False)
+        self.assertTrue(result.ran)
+        self.assertEqual(result.exit_code, 1)
+        self.assertIsNotNone(result.error)
+        self.assertIn("exited with code 1", result.error)
+        self.assertFalse(result.ok())
+
+    @mock.patch("subprocess.run")
+    def test_full_run_timeout(self, mock_run):
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd="docker", timeout=5)
+        cfg = cr.ContainerConfig(image="test:latest", run_timeout=5)
+        runner = cr.ContainerRunner(cfg, scenarios_dir=SCENARIOS_DIR)
+        paths = runner.scenario_paths()
+        out_dir = tempfile.mkdtemp()
+        result = runner.run_scenario(paths[0], out_dir, dry_run=False)
+        self.assertFalse(result.ran)
+        self.assertEqual(result.exit_code, -1)
+        self.assertIsNotNone(result.error)
+        self.assertIn("timed out", result.error)
+
+    @mock.patch("subprocess.run")
+    def test_full_run_docker_not_found(self, mock_run):
+        mock_run.side_effect = FileNotFoundError("docker")
+        cfg = cr.ContainerConfig(image="test:latest")
+        runner = cr.ContainerRunner(cfg, scenarios_dir=SCENARIOS_DIR)
+        paths = runner.scenario_paths()
+        out_dir = tempfile.mkdtemp()
+        result = runner.run_scenario(paths[0], out_dir, dry_run=False)
+        self.assertFalse(result.ran)
+        self.assertEqual(result.exit_code, -1)
+        self.assertIsNotNone(result.error)
+        self.assertIn("docker CLI not found", result.error)
+
+    @mock.patch("subprocess.run")
+    def test_full_run_stdout_truncated(self, mock_run):
+        """stdout should be truncated to 4KB."""
+        class FakeResult:
+            def __init__(self, code, out, err):
+                self.returncode = code
+                self.stdout = out
+                self.stderr = err
+                self.args = []
+
+        long_stdout = "x" * 10000
+        mock_run.return_value = FakeResult(0, long_stdout, "")
+        cfg = cr.ContainerConfig(image="test:latest")
+        runner = cr.ContainerRunner(cfg, scenarios_dir=SCENARIOS_DIR)
+        paths = runner.scenario_paths()
+        out_dir = tempfile.mkdtemp()
+        result = runner.run_scenario(paths[0], out_dir, dry_run=False)
+        self.assertEqual(len(result.stdout), 4096)
+
+    @mock.patch("subprocess.run")
+    def test_full_run_stderr_truncated(self, mock_run):
+        """stderr should be truncated to 4KB."""
+        class FakeResult:
+            def __init__(self, code, out, err):
+                self.returncode = code
+                self.stdout = out
+                self.stderr = err
+                self.args = []
+
+        long_stderr = "y" * 10000
+        mock_run.return_value = FakeResult(0, "ok\n", long_stderr)
+        cfg = cr.ContainerConfig(image="test:latest")
+        runner = cr.ContainerRunner(cfg, scenarios_dir=SCENARIOS_DIR)
+        paths = runner.scenario_paths()
+        out_dir = tempfile.mkdtemp()
+        result = runner.run_scenario(paths[0], out_dir, dry_run=False)
+        self.assertEqual(len(result.stderr), 4096)
+
+
+class TestRunAllSummary(unittest.TestCase):
+    """run_all: summary structure and correctness."""
+
+    @mock.patch("subprocess.run", side_effect=_fake_subprocess_run)
+    def test_run_all_summary_structure(self, mock_run):
+        cfg = cr.ContainerConfig(image="test:latest")
+        runner = cr.ContainerRunner(cfg, scenarios_dir=SCENARIOS_DIR)
+        out_dir = tempfile.mkdtemp()
+        results, summary = runner.run_all(out_dir, dry_run=True)
+        self.assertIn("total", summary)
+        self.assertIn("ok", summary)
+        self.assertIn("failed", summary)
+        self.assertIn("results", summary)
+        self.assertEqual(summary["total"], len(results))
+        self.assertEqual(summary["ok"] + summary["failed"], summary["total"])
+
+    @mock.patch("subprocess.run", side_effect=_fake_subprocess_run)
+    def test_run_all_dry_run_convenience(self, mock_run):
+        cfg = cr.ContainerConfig(image="test:latest")
+        runner = cr.ContainerRunner(cfg, scenarios_dir=SCENARIOS_DIR)
+        out_dir = tempfile.mkdtemp()
+        results, summary = runner.run_all_dry_run(out_dir)
+        self.assertGreater(summary["total"], 0)
+        self.assertEqual(summary["failed"], 0)
+
+    @mock.patch("subprocess.run", side_effect=_fake_subprocess_run)
+    def test_run_all_empty_scenarios(self, mock_run):
+        """run_all with no scenarios returns empty results."""
+        cfg = cr.ContainerConfig(image="test:latest")
+        runner = cr.ContainerRunner(cfg, scenarios_dir="/nonexistent")
+        out_dir = tempfile.mkdtemp()
+        results, summary = runner.run_all(out_dir)
+        self.assertEqual(results, [])
+        self.assertEqual(summary, {"total": 0, "ok": 0, "failed": 0})
+
+
+class TestDockerHelpers(unittest.TestCase):
+    """Static Docker helper methods."""
+
+    @mock.patch("subprocess.run")
+    def test_image_exists_false_on_nonzero(self, mock_run):
+        class FakeResult:
+            def __init__(self, code, out, err):
+                self.returncode = code
+                self.stdout = out
+                self.stderr = err
+                self.args = []
+
+        mock_run.return_value = FakeResult(1, "", "no such image\n")
+        self.assertFalse(cr.ContainerRunner._image_exists("nonexistent:tag"))
+
+    @mock.patch("subprocess.run", side_effect=_fake_subprocess_run)
+    def test_docker_available_false_on_timeout(self, mock_run):
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd="docker", timeout=10)
+        self.assertFalse(cr.ContainerRunner._docker_available())
+
+    @mock.patch("subprocess.run")
+    def test_run_docker_returns_tuple(self, mock_run):
+        class FakeResult:
+            def __init__(self, code, out, err):
+                self.returncode = code
+                self.stdout = out
+                self.stderr = err
+                self.args = []
+
+        mock_run.return_value = FakeResult(0, "output\n", "err\n")
+        ec, stdout, stderr = cr.ContainerRunner._run_docker(
+            ["docker", "info"], timeout=5,
+        )
+        self.assertEqual(ec, 0)
+        self.assertEqual(stdout, "output\n")
+        self.assertEqual(stderr, "err\n")
+
+    @mock.patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="docker", timeout=5))
+    def test_run_docker_timeout(self, mock_run):
+        ec, stdout, stderr = cr.ContainerRunner._run_docker(
+            ["docker", "run"], timeout=5,
+        )
+        self.assertEqual(ec, -1)
+        self.assertEqual(stderr, "timeout")
+
+    @mock.patch("subprocess.run", side_effect=FileNotFoundError("docker"))
+    def test_run_docker_not_found(self, mock_run):
+        ec, stdout, stderr = cr.ContainerRunner._run_docker(
+            ["docker", "run"], timeout=5,
+        )
+        self.assertEqual(ec, -1)
+        self.assertEqual(stderr, "docker not found")
+
+
+class TestFromManifestEdgeCases(unittest.TestCase):
+    """ContainerRunner.from_manifest: error handling."""
+
+    def test_from_manifest_invalid_json(self):
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False,
+        ) as fh:
+            fh.write("{invalid")
+            tmp_path = fh.name
+        try:
+            with self.assertRaises(json.JSONDecodeError):
+                cr.ContainerRunner.from_manifest(manifest_path=tmp_path)
+        finally:
+            os.unlink(tmp_path)
+
+    def test_from_manifest_missing_image_key(self):
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False,
+        ) as fh:
+            json.dump({"no_image": "here"}, fh)
+            tmp_path = fh.name
+        try:
+            with self.assertRaises(ValueError):
+                cr.ContainerRunner.from_manifest(manifest_path=tmp_path)
+        finally:
+            os.unlink(tmp_path)
+
+    def test_from_manifest_with_overrides(self):
+        if not os.path.exists(MANIFEST_PATH):
+            self.skipTest("benchmark-manifest.json not found")
+        runner = cr.ContainerRunner.from_manifest(
+            manifest_path=MANIFEST_PATH,
+            scenarios_dir=SCENARIOS_DIR,
+            network_mode="bridge",
+            memory_limit="1g",
+        )
+        self.assertEqual(runner.config.network_mode, "bridge")
+        self.assertEqual(runner.config.memory_limit, "1g")
+
+    def test_from_manifest_list_format(self):
+        """Manifest may be a list of images; the first image tag is used."""
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False,
+        ) as fh:
+            json.dump({"image": {"tag": "hermes-benchmark:listtest"}}, fh)
+            tmp_path = fh.name
+        try:
+            runner = cr.ContainerRunner.from_manifest(manifest_path=tmp_path)
+            self.assertEqual(runner.config.image, "hermes-benchmark:listtest")
+        finally:
+            os.unlink(tmp_path)
+
+
+class TestRunnerConstructor(unittest.TestCase):
+    """ContainerRunner constructor: default values."""
+
+    def test_default_providers(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+        )
+        self.assertEqual(runner.providers, "hermes_memory,lexical_baseline")
+
+    def test_custom_providers(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+            providers="hindsight",
+        )
+        self.assertEqual(runner.providers, "hindsight")
+
+    def test_default_repetitions(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+        )
+        self.assertEqual(runner.repetitions, 3)
+
+    def test_custom_repetitions(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+            repetitions=10,
+        )
+        self.assertEqual(runner.repetitions, 10)
+
+    def test_default_seed(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+        )
+        self.assertEqual(runner.seed, 7)
+
+    def test_custom_seed(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+            seed=99,
+        )
+        self.assertEqual(runner.seed, 99)
+
+    def test_default_scenarios_dir(self):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+        )
+        self.assertEqual(runner.scenarios_dir, cr.DEFAULT_SCENARIOS_DIR)
+
+
+class TestDestroyContainer(unittest.TestCase):
+    """_destroy_container: calls docker rm -f."""
+
+    @mock.patch("subprocess.run", side_effect=_fake_subprocess_run)
+    def test_destroy_container_calls_rm(self, mock_run):
+        runner = cr.ContainerRunner(
+            cr.ContainerConfig(image="test:latest"),
+            scenarios_dir=SCENARIOS_DIR,
+        )
+        runner._destroy_container("abc123")
+        # Find the docker rm call
+        rm_calls = [
+            c for c in mock_run.call_args_list
+            if c.args and len(c.args) >= 1 and isinstance(c.args[0], list)
+            and c.args[0][:3] == ["docker", "rm", "-f"]
+        ]
+        self.assertTrue(rm_calls, "docker rm -f should have been called")
+        self.assertIn("abc123", rm_calls[0].args[0])
+
+
 if __name__ == "__main__":
     unittest.main()

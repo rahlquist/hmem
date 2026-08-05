@@ -1,0 +1,10 @@
+# Build context for benchmark image
+# Exclude transient and large dirs
+pilot-out/
+.venv/
+.pytest_cache/
+memory_paper.png
+__pycache__/
+*.pyc
+.scan/
+memorypapers/
