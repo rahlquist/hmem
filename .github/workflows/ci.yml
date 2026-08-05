@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  checks: write
 
 jobs:
   test:
@@ -27,5 +28,25 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Run unit tests
-        run: python -m unittest discover -s pilot/tests -p "test_*.py"
+      - name: Run unit tests and generate JUnit report
+        run: python -m pilot.junit_runner --output test-results.xml
+
+      - name: Upload JUnit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-test-results
+          path: test-results.xml
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish browsable test results
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: Test Results
+          path: test-results.xml
+          reporter: java-junit
+          list-suites: all
+          list-tests: all
+          fail-on-error: true
