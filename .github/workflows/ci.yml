@@ -50,3 +50,36 @@ jobs:
           list-suites: all
           list-tests: all
           fail-on-error: true
+
+  benchmark:
+    name: Measured provider comparison
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Run three isolated measured comparisons
+        run: make pilot-provider-comparison
+
+      - name: Publish comparison summary
+        if: always()
+        run: cat pilot-out/provider-comparison/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload raw benchmark results and comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: measured-provider-comparison
+          path: |
+            pilot-out/provider-comparison-runs/runs
+            pilot-out/provider-comparison/report.md
+            pilot-out/provider-comparison/report.json
+          if-no-files-found: error
+          retention-days: 30

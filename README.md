@@ -3,6 +3,22 @@
 > A community-maintained comparison of memory add-ons and providers compatible with Hermes Agent.
 > Last updated: 2026-07-31.
 
+## Measured Benchmark Results
+
+The current controlled benchmark compares the two providers with real measured
+adapters over 30 reviewed scenarios, 10 categories, and three isolated runs
+(180 measured result documents, zero failures):
+
+| Provider | Overall correctness | Runs | Results |
+|---|---:|---:|---:|
+| BM25 lexical baseline | 0.367 | 3 | 90 |
+| Hermes built-in memory | 0.333 | 3 | 90 |
+
+See the [full category-by-category comparison](evaluation/results/provider-comparison.md)
+and [machine-readable JSON](evaluation/results/provider-comparison.json). Hindsight
+and Mnemosyne are listed as **not measured** because real measured adapters have
+not been implemented; their simulated stubs are excluded from these scores.
+
 ## Quick Reference — All Providers
 
 | # | Provider | Repo | Stars | Storage | Security | Type | Cost | Agents | Key Differentiator |
