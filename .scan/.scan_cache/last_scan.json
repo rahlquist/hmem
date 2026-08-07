@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-08-07T08:08:44.046523",
+  "github_repos": [
+    {
+      "name": "yantrikos/yantrikdb-hermes-plugin",
+      "stars": 78,
+      "description": "YantrikDB memory provider for NousResearch/hermes-agent \u2014 self-maintaining memory with benchmarked recall, self-tuning ranking, contradiction tracking, proactive hygiene, and explainable recall.",
+      "url": "https://github.com/yantrikos/yantrikdb-hermes-plugin"
+    },
+    {
+      "name": "1ch1n/mychatarchive",
+      "stars": 58,
+      "description": "Local-first AI memory archive. Import ChatGPT, Claude, and Grok exports, generate semantic embeddings, and search via MCP server. Zero cloud, zero cost.",
+      "url": "https://github.com/1ch1n/mychatarchive"
+    },
+    {
+      "name": "penfieldlabs/hermes-penfield",
+      "stars": 3,
+      "description": "\ud83e\udde0 Penfield memory provider for Hermes agent",
+      "url": "https://github.com/penfieldlabs/hermes-penfield"
+    },
+    {
+      "name": "raman325/hermes-mempalace-mcporter",
+      "stars": 2,
+      "description": "Hermes MemoryProvider plugin that routes through mempalace's MCP server via mcporter + an MCP aggregator. Phase 2 companion to MemPalace/mempalace#1684.",
+      "url": "https://github.com/raman325/hermes-mempalace-mcporter"
+    },
+    {
+      "name": "hermes-pro/mem0",
+      "stars": 1,
+      "description": "Codex & OpenRouter compatible local Mem0 memory for Hermes agent.",
+      "url": "https://github.com/hermes-pro/mem0"
+    }
+  ],
+  "atlas_available": true,
+  "awesome_available": true
+}

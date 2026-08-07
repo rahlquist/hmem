@@ -1,7 +1,7 @@
 # hmem — Hermes Memory Provider Comparison
 
 > A community-maintained comparison of memory add-ons and providers compatible with Hermes Agent.
-> Last updated: 2026-07-31.
+> Last updated: 2026-08-07.
 
 ## Measured Benchmark Results
 
@@ -60,6 +60,17 @@ Each provider listed above has a dedicated subdirectory under `providers/` with 
 | 13 | SignetAI | [providers/signetai.md](providers/signetai.md) |
 | 14 | YantrikDB | [providers/yantrikdb.md](providers/yantrikdb.md) |
 | 15 | AgentMemory | [providers/agentmemory.md](providers/agentmemory.md) |
+
+## Nightly Scan — New Providers Detected (2026-08-07)
+
+The automated scanner (GitHub topic `hermes-memory-provider`, HermesAtlas, awesome-hermes-agent) found 4 repositories not yet listed in the table above. They are logged here for review; add full spec pages if/when they warrant inclusion:
+
+- [1ch1n/mychatarchive](https://github.com/1ch1n/mychatarchive) (★ 58) — Local-first AI memory archive; imports ChatGPT, Claude, and Grok exports, generates semantic embeddings, searches via MCP server. Zero cloud, zero cost.
+- [penfieldlabs/hermes-penfield](https://github.com/penfieldlabs/hermes-penfield) (★ 3) — Penfield memory provider for Hermes agent.
+- [raman325/hermes-mempalace-mcporter](https://github.com/raman325/hermes-mempalace-mcporter) (★ 2) — Hermes MemoryProvider plugin routing through mempalace's MCP server via mcporter + an MCP aggregator (phase 2 companion to MemPalace/mempalace#1684).
+- [hermes-pro/mem0](https://github.com/hermes-pro/mem0) (★ 1) — Codex & OpenRouter compatible local Mem0 memory for Hermes agent.
+
+Also refreshed from the scan: `yantrikos/yantrikdb-hermes-plugin` now ★ 78 (previously listed ★ 76).
 
 ## How to Use This Repo
 
