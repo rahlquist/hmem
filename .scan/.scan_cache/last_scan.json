@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-09T07:00:45.090986",
+  "timestamp": "2026-08-11T07:01:27.671224",
   "github_repos": [
     {
       "name": "yantrikos/yantrikdb-hermes-plugin",
@@ -9,7 +9,7 @@
     },
     {
       "name": "1ch1n/mychatarchive",
-      "stars": 58,
+      "stars": 59,
       "description": "Local-first AI memory archive. Import ChatGPT, Claude, and Grok exports, generate semantic embeddings, and search via MCP server. Zero cloud, zero cost.",
       "url": "https://github.com/1ch1n/mychatarchive"
     },
