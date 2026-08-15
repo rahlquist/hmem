@@ -17,6 +17,11 @@ SEARCH_QUERIES = [
     "MCP server hermes memory provider 2026",
     "hermes memory provider comparison 2026",
     "hermes memory provider security audit 2026",
+    "Mem0 Letta Zep Graphiti agent memory vector database",
+    "Redis Qdrant Chroma Milvus agent memory 2026",
+    "AI agent long term memory product 2026",
+    "MCP server memory semantic cache agentic 2026",
+    "agent memory layer startup 2026",
 ]
 
 def scan_github_topic():
