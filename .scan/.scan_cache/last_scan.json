@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-08-19T07:01:18.508408",
+  "timestamp": "2026-08-20T07:00:58.274344",
   "github_repos": [
     {
       "name": "yantrikos/yantrikdb-hermes-plugin",
-      "stars": 80,
+      "stars": 81,
       "description": "YantrikDB memory provider for NousResearch/hermes-agent \u2014 self-maintaining memory with benchmarked recall, self-tuning ranking, contradiction tracking, proactive hygiene, and explainable recall.",
       "url": "https://github.com/yantrikos/yantrikdb-hermes-plugin"
     },
