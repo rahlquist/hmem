@@ -138,3 +138,13 @@
   - penfieldlabs/hermes-penfield (★ 3)
   - raman325/hermes-mempalace-mcporter (★ 2)
   - hermes-pro/mem0 (★ 1)
+
+## Scan: 2026-08-22T07:00:59.582015
+- GitHub repos scanned: 5
+- HermesAtlas available: True
+- Awesome Hermes available: True
+  - yantrikos/yantrikdb-hermes-plugin (★ 81)
+  - 1ch1n/mychatarchive (★ 61)
+  - penfieldlabs/hermes-penfield (★ 3)
+  - raman325/hermes-mempalace-mcporter (★ 2)
+  - hermes-pro/mem0 (★ 1)
