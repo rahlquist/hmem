@@ -120,6 +120,14 @@ The automated scanner (GitHub topic `hermes-memory-provider`, HermesAtlas, aweso
 
 The automated scanner (GitHub topic `hermes-memory-provider`, HermesAtlas, awesome-hermes-agent) found no new repositories since the last scan. The same 5 repos remain on the topic; the cache was refreshed (star counts may have shifted slightly — see `.scan/.scan_cache/last_scan.json`).
 
+## Nightly Scan — New Providers Detected (2026-10-28)
+
+The automated scanner (GitHub topic `hermes-memory-provider`, HermesAtlas, awesome-hermes-agent) found 1 new repository not yet listed in the table above. It is logged here for review; add a full spec page if/when it warrants inclusion:
+
+- [companionintelligence/Companion-Memory](https://github.com/companionintelligence/Companion-Memory) (★ 3) — Companion Memory; personal digital twin; front + back end API + web monorepo.
+
+Also refreshed from the scan: `yantrikos/yantrikdb-hermes-plugin` now ★ 95 (previously ★ 76 in the table; the earlier 2026-08-07 log noted ★ 78), and `1ch1n/mychatarchive` now ★ 69.
+
 ## How to Use This Repo
 
 1. Pick a provider from the table above.

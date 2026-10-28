@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-26T07:00:24.610871",
+  "timestamp": "2026-10-28T07:00:55.062818",
   "github_repos": [
     {
       "name": "yantrikos/yantrikdb-hermes-plugin",
@@ -9,7 +9,7 @@
     },
     {
       "name": "1ch1n/mychatarchive",
-      "stars": 68,
+      "stars": 69,
       "description": "Local-first AI memory archive. Import ChatGPT, Claude, and Grok exports, generate semantic embeddings, and search via MCP server. Zero cloud, zero cost.",
       "url": "https://github.com/1ch1n/mychatarchive"
     },
@@ -18,6 +18,12 @@
       "stars": 4,
       "description": "\ud83e\udde0 Penfield memory provider for Hermes agent",
       "url": "https://github.com/penfieldlabs/hermes-penfield"
+    },
+    {
+      "name": "companionintelligence/Companion-Memory",
+      "stars": 3,
+      "description": "Companion Memory - Personal Digital Twin - Front + Back End API + Web Monorepo",
+      "url": "https://github.com/companionintelligence/Companion-Memory"
     },
     {
       "name": "raman325/hermes-mempalace-mcporter",
