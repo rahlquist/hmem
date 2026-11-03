@@ -132,6 +132,10 @@ Also refreshed from the scan: `yantrikos/yantrikdb-hermes-plugin` now ★ 95 (pr
 
 The automated scanner (GitHub topic `hermes-memory-provider`, HermesAtlas, awesome-hermes-agent) found no new repositories since the 2026-10-28 scan. The same 6 repos remain on the topic; the cache was refreshed (star counts may have shifted slightly — see `.scan/.scan_cache/last_scan.json`).
 
+## Nightly Scan — No New Providers (2026-11-03)
+
+The automated scanner (GitHub topic `hermes-memory-provider`, HermesAtlas, awesome-hermes-agent) found no new repositories since the last scan. The same 6 repos remain on the topic; the cache was refreshed (star counts may have shifted slightly — see `.scan/.scan_cache/last_scan.json`).
+
 ## How to Use This Repo
 
 1. Pick a provider from the table above.
