@@ -136,6 +136,10 @@ The automated scanner (GitHub topic `hermes-memory-provider`, HermesAtlas, aweso
 
 The automated scanner (GitHub topic `hermes-memory-provider`, HermesAtlas, awesome-hermes-agent) found no new repositories since the last scan. The same 6 repos remain on the topic; the cache was refreshed (star counts may have shifted slightly — see `.scan/.scan_cache/last_scan.json`).
 
+## Nightly Scan — No New Providers (2026-11-04)
+
+The automated scanner (GitHub topic `hermes-memory-provider`, HermesAtlas, awesome-hermes-agent) found no new repositories since the last scan. The same 6 repos remain on the topic; the cache was refreshed (star counts may have shifted slightly — see `.scan/.scan_cache/last_scan.json`).
+
 ## How to Use This Repo
 
 1. Pick a provider from the table above.
