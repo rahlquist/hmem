@@ -1,15 +1,15 @@
 {
-  "timestamp": "2026-11-06T08:00:46.778035",
+  "timestamp": "2026-11-07T08:00:46.745231",
   "github_repos": [
     {
       "name": "yantrikos/yantrikdb-hermes-plugin",
-      "stars": 94,
+      "stars": 95,
       "description": "YantrikDB memory provider for NousResearch/hermes-agent \u2014 self-maintaining memory with benchmarked recall, self-tuning ranking, contradiction tracking, proactive hygiene, and explainable recall.",
       "url": "https://github.com/yantrikos/yantrikdb-hermes-plugin"
     },
     {
       "name": "1ch1n/mychatarchive",
-      "stars": 71,
+      "stars": 72,
       "description": "Local-first AI memory archive. Import ChatGPT, Claude, and Grok exports, generate semantic embeddings, and search via MCP server. Zero cloud, zero cost.",
       "url": "https://github.com/1ch1n/mychatarchive"
     },
